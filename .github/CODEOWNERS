@@ -1,0 +1,49 @@
+# 代码所有者文件
+# 详细信息请参见: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# 全局所有者 - 这些用户将被请求审查所有更改
+* @wyw121
+
+# 前端相关文件
+/frontend/ @wyw121
+*.tsx @wyw121
+*.ts @wyw121
+*.css @wyw121
+*.scss @wyw121
+package.json @wyw121
+package-lock.json @wyw121
+
+# 后端相关文件
+/backend/ @wyw121
+*.rs @wyw121
+Cargo.toml @wyw121
+Cargo.lock @wyw121
+
+# 数据库相关文件
+/backend/migrations/ @wyw121
+*.sql @wyw121
+
+# 配置文件
+.github/ @wyw121
+*.yml @wyw121
+*.yaml @wyw121
+*.json @wyw121
+docker-compose*.yml @wyw121
+Dockerfile @wyw121
+.dockerignore @wyw121
+
+# 安全敏感文件 - 需要更严格的审查
+.github/workflows/ @wyw121
+*.env.example @wyw121
+/backend/src/config/ @wyw121
+/backend/src/auth/ @wyw121
+
+# 文档文件
+*.md @wyw121
+/docs/ @wyw121
+
+# 测试文件
+*test* @wyw121
+*spec* @wyw121
+__tests__/ @wyw121
+tests/ @wyw121

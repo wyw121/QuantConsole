@@ -1,8 +1,159 @@
 {
 	"folders": [
 		{
+			"name": "🎯 QuantConsole (Root)",
 			"path": "."
+		},
+		{
+			"name": "🌐 Frontend (React + TypeScript)",
+			"path": "./frontend"
+		},
+		{
+			"name": "⚙️ Backend (Rust + Actix-web)",
+			"path": "./backend"
+		},
+		{
+			"name": "🗄️ Database Migration",
+			"path": "./backend/migration"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.exclude": {
+			"**/node_modules": true,
+			"**/target": true,
+			"**/.git": true,
+			"**/dist": true,
+			"**/.next": true
+		},
+		"search.exclude": {
+			"**/node_modules": true,
+			"**/target": true,
+			"**/dist": true
+		},
+		"typescript.preferences.includePackageJsonAutoImports": "on",
+		"rust-analyzer.checkOnSave.command": "clippy",
+		"rust-analyzer.cargo.allFeatures": true,
+		"editor.formatOnSave": true,
+		"editor.codeActionsOnSave": {
+			"source.fixAll.eslint": "explicit"
+		},
+		"[rust]": {
+			"editor.defaultFormatter": "rust-lang.rust-analyzer",
+			"editor.formatOnSave": true
+		},
+		"[typescript]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"[typescriptreact]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"[json]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"explorer.fileNesting.enabled": true,
+		"explorer.fileNesting.expand": false,
+		"explorer.fileNesting.patterns": {
+			"*.ts": "${capture}.js, ${capture}.d.ts.map, ${capture}.d.ts, ${capture}.js.map",
+			"*.tsx": "${capture}.js, ${capture}.jsx",
+			"package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml",
+			"Cargo.toml": "Cargo.lock",
+			"docker-compose.yml": "docker-compose.*.yml, Dockerfile*, .dockerignore"
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"rust-lang.rust-analyzer",
+			"bradlc.vscode-tailwindcss",
+			"esbenp.prettier-vscode",
+			"dbaeumer.vscode-eslint",
+			"ms-vscode.vscode-typescript-next",
+			"formulahendry.auto-rename-tag",
+			"christian-kohler.path-intellisense",
+			"ms-vscode.vscode-json",
+			"serayuzgur.crates",
+			"tamasfe.even-better-toml"
+		]
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "🚀 Start Development (All)",
+				"dependsOrder": "parallel",
+				"dependsOn": [
+					"Frontend: Dev Server",
+					"Backend: Dev Server"
+				],
+				"group": "build"
+			},
+			{
+				"label": "Frontend: Dev Server",
+				"type": "shell",
+				"command": "npm",
+				"args": ["run", "dev"],
+				"options": {
+					"cwd": "${workspaceFolder}/frontend"
+				},
+				"group": "build",
+				"presentation": {
+					"group": "dev",
+					"panel": "dedicated"
+				},
+				"runOptions": {
+					"runOn": "folderOpen"
+				}
+			},
+			{
+				"label": "Backend: Dev Server",
+				"type": "shell",
+				"command": "cargo",
+				"args": ["run"],
+				"options": {
+					"cwd": "${workspaceFolder}/backend"
+				},
+				"group": "build",
+				"presentation": {
+					"group": "dev",
+					"panel": "dedicated"
+				}
+			},
+			{
+				"label": "Frontend: Build",
+				"type": "shell",
+				"command": "npm",
+				"args": ["run", "build"],
+				"options": {
+					"cwd": "${workspaceFolder}/frontend"
+				},
+				"group": "build"
+			},
+			{
+				"label": "Backend: Build",
+				"type": "shell",
+				"command": "cargo",
+				"args": ["build", "--release"],
+				"options": {
+					"cwd": "${workspaceFolder}/backend"
+				},
+				"group": "build"
+			},
+			{
+				"label": "Database: Run Migration",
+				"type": "shell",
+				"command": "cargo",
+				"args": ["run"],
+				"options": {
+					"cwd": "${workspaceFolder}/backend/migration"
+				},
+				"group": "build"
+			},
+			{
+				"label": "🐳 Docker: Start All Services",
+				"type": "shell",
+				"command": "docker-compose",
+				"args": ["up", "-d"],
+				"group": "build"
+			}
+		]
+	}
 }

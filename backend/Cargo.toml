@@ -1,0 +1,72 @@
+[package]
+name = "quantconsole-backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Web 框架
+actix-web = "4.4"
+actix-cors = "0.6"
+actix-files = "0.6"
+
+# 异步运行时
+tokio = { version = "1.0", features = ["full"] }
+
+# 序列化/反序列化
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# 数据库
+sea-orm = { version = "0.12", features = [
+    "sqlx-mysql",
+    "runtime-tokio-rustls",
+    "macros",
+    "with-chrono",
+    "with-uuid"
+] }
+sea-orm-migration = "0.12"
+
+# 认证和安全
+jsonwebtoken = "9.2"
+bcrypt = "0.15"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+totp-rs = "5.4"
+qrcode = "0.14"
+
+# 时间处理
+chrono = { version = "0.4", features = ["serde"] }
+
+# 环境变量
+dotenvy = "0.15"
+
+# 日志
+log = "0.4"
+env_logger = "0.10"
+
+# 错误处理
+anyhow = "1.0"
+thiserror = "1.0"
+
+# 验证
+validator = { version = "0.16", features = ["derive"] }
+
+# 邮件发送
+lettre = "0.11"
+
+# 配置管理
+config = "0.13"
+
+# HTTP 客户端
+reqwest = { version = "0.11", features = ["json"] }
+
+# 图像处理 (用于头像上传)
+image = "0.24"
+
+# Base64 编码
+base64 = "0.21"
+
+# WebSocket 支持
+actix-web-actors = "4.2"
+
+[dev-dependencies]
+actix-rt = "2.8"
