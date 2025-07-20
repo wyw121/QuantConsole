@@ -22,9 +22,10 @@ sea-orm = { version = "0.12", features = [
     "runtime-tokio-rustls",
     "macros",
     "with-chrono",
-    "with-uuid"
+    "with-uuid",
 ] }
 sea-orm-migration = "0.12"
+migration = { path = "./migration" }
 
 # 认证和安全
 jsonwebtoken = "9.2"

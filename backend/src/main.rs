@@ -5,9 +5,10 @@ mod services;
 mod utils;
 
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer, middleware::Logger};
+use actix_web::{middleware::Logger, web, App, HttpServer};
 use dotenvy::dotenv;
 use sea_orm::{Database, DatabaseConnection};
+use sea_orm_migration::prelude::*;
 use std::{env, sync::Arc};
 
 use handlers::*;
@@ -20,10 +21,15 @@ pub struct AppState {
 }
 
 async fn create_database_connection() -> Result<DatabaseConnection, Box<dyn std::error::Error>> {
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL 必须在环境变量中设置");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL 必须在环境变量中设置");
 
     let db = Database::connect(&database_url).await?;
+
+    // 运行数据库迁移
+    log::info!("正在运行数据库迁移...");
+    migration::Migrator::up(&db, None).await?;
+    log::info!("数据库迁移完成");
+
     Ok(db)
 }
 
@@ -45,8 +51,8 @@ async fn main() -> std::io::Result<()> {
     log::info!("数据库连接成功");
 
     // 创建服务
-    let jwt_secret = env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "your-super-secret-jwt-key".to_string());
+    let jwt_secret =
+        env::var("JWT_SECRET").unwrap_or_else(|_| "your-super-secret-jwt-key".to_string());
 
     let auth_service = Arc::new(AuthService::new(db.clone(), jwt_secret));
 
@@ -89,15 +95,13 @@ async fn main() -> std::io::Result<()> {
                                     .wrap(JwtAuth::new(auth_service.clone()))
                                     .route("/logout", web::post().to(logout))
                                     .route("/2fa/setup", web::post().to(setup_two_factor))
-                                    .route("/2fa/confirm", web::post().to(confirm_two_factor))
-                            )
+                                    .route("/2fa/confirm", web::post().to(confirm_two_factor)),
+                            ),
                     )
                     // 用户路由 (需要身份验证)
                     .service(
-                        web::scope("/user")
-                            .wrap(JwtAuth::new(auth_service.clone()))
-                            // 这里可以添加用户相关的路由
-                    )
+                        web::scope("/user").wrap(JwtAuth::new(auth_service.clone())), // 这里可以添加用户相关的路由
+                    ),
             )
     })
     .bind(format!("{}:{}", host, port))?
