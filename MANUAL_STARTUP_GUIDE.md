@@ -2,6 +2,15 @@
 
 本文档详细说明如何在不使用 Docker 的情况下手动启动 QuantConsole 项目的前端和后端服务。
 
+## 🎯 GitHub Copilot 性能优化说明
+
+为了确保 GitHub Copilot 的最佳性能，我们已禁用了自动运行的 VS Code 任务（`runOn: "folderOpen"`）。这避免了 Copilot 与后台任务之间的资源竞争，提供更流畅的编码体验。
+
+**影响**：
+- 开发服务器不会在打开工作区时自动启动
+- 需要手动启动所需的开发任务
+- 更好的 Copilot 响应性能和建议质量
+
 ## 📋 前置要求
 
 在开始之前，请确保您的系统已安装以下软件：
@@ -31,6 +40,37 @@ cargo --version
 # 检查 MySQL 是否运行
 mysql --version
 ```
+
+## ⚡ VS Code 任务快速启动
+
+为了提高开发效率，项目配置了 VS Code 任务，可以快速启动各种开发服务。
+
+### 使用 VS Code 任务
+
+1. **打开命令面板**: `Ctrl+Shift+P`
+2. **输入**: `Tasks: Run Task`
+3. **选择任务**:
+   - `🚀 Start Development (All)` - 启动所有开发服务器
+   - `Frontend: Dev Server` - 仅启动前端开发服务器 (端口 5173)
+   - `Backend: Dev Server` - 仅启动后端开发服务器 (端口 8080)
+   - `Database: Run Migration` - 运行数据库迁移
+   - `🐳 Docker: Start All Services` - 启动所有 Docker 服务
+
+### 推荐启动顺序
+
+1. 先启动数据库服务 (`🐳 Docker: Start All Services`)
+2. 运行数据库迁移 (`Database: Run Migration`)
+3. 启动后端服务 (`Backend: Dev Server`)
+4. 启动前端服务 (`Frontend: Dev Server`)
+
+### 任务优势
+
+- ✅ 自动设置正确的工作目录
+- ✅ 统一的终端管理
+- ✅ 快捷键支持
+- ✅ 错误检测和问题匹配
+
+> **注意**: 为了优化 GitHub Copilot 性能，VS Code 任务不会自动启动。请根据需要手动运行相应任务。
 
 ## 🗄️ 数据库配置
 

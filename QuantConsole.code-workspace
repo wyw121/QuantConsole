@@ -103,9 +103,6 @@
 				"presentation": {
 					"group": "dev",
 					"panel": "dedicated"
-				},
-				"runOptions": {
-					"runOn": "folderOpen"
 				}
 			},
 			{
