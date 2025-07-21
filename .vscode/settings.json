@@ -1,0 +1,50 @@
+{
+    // === 终端配置 ===
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell",
+            "args": [
+                "-NoLogo",
+                "-ExecutionPolicy", "Bypass",
+                "-File", "${workspaceFolder}/.vscode/powershell-profile.ps1"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+
+    // === GitHub Copilot 兼容性优化 (Issue #253265) ===
+    // 禁用自动任务以避免与 Copilot 的资源竞争
+    "task.autoDetect": "off",
+    "task.slowProviderWarning": false,
+
+    // 优化终端集成以确保 Copilot 能正确捕获输出
+    "terminal.integrated.shellIntegration.enabled": true,
+    "terminal.integrated.shellIntegration.decorationsEnabled": "both",
+    "terminal.integrated.shellIntegration.history": 100,
+
+    // 减少可能干扰 Copilot 的自动功能
+    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.integratedConsole.suppressStartupBanner": true,
+
+    // === 编辑器性能优化 ===
+    // 减少与 Copilot 的性能竞争
+    "editor.codeLens": false,
+    "editor.inlayHints.enabled": "off",
+    "editor.hover.delay": 1000,
+
+    // === 文件监视优化 ===
+    // 减少文件系统监视以释放资源给 Copilot
+    "files.watcherExclude": {
+        "**/target/**": true,
+        "**/node_modules/**": true,
+        "**/.git/**": true,
+        "**/dist/**": true,
+        "**/build/**": true
+    },
+
+    // === 扩展性能优化 ===
+    // 确保 Copilot 获得足够的系统资源
+    "extensions.autoUpdate": false,
+    "extensions.autoCheckUpdates": false
+}

@@ -1,0 +1,26 @@
+{
+    "version": "2.0.0",
+    "//": "=== 此文件已被永久禁用 ===",
+    "//comment1": "根据用户明确要求，此 tasks.json 文件已被完全禁用",
+    "//comment2": "GitHub Copilot 严禁使用此文件中的任何任务配置",
+    "//comment3": "所有开发任务必须使用 run_in_terminal 工具手动执行",
+    "//comment4": "请参考 .github/copilot-instructions.md 中的相关说明",
+    "tasks": [
+        {
+            "label": "❌ 文件已禁用 - 严禁使用",
+            "type": "shell",
+            "command": "echo",
+            "args": [
+                "此 tasks.json 文件已被用户永久禁用。GitHub Copilot 严禁使用此文件。请使用 run_in_terminal 工具手动执行所有开发任务。"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

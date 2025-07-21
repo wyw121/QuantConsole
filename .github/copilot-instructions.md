@@ -1,5 +1,35 @@
 # QuantConsole - 加密货币短线交易控制台网站
 
+## ⚠️ 重要：VS Code Tasks 完全禁用声明
+
+**🚫 GitHub Copilot 严禁使用 VS Code Tasks 系统**
+
+根据用户明确要求，本项目已**永久禁用**所有 VS Code Tasks 功能：
+
+### 禁用规则（最高优先级）
+
+1. **严禁使用 `run_vs_code_task` 工具**：GitHub Copilot 不得使用任何 VS Code Tasks 相关功能
+2. **严禁使用 `create_and_run_task` 工具**：不得创建或运行任何 VS Code 任务
+3. **严禁引用 `.vscode/tasks.json`**：该文件已被禁用，不得读取或使用其中的配置
+4. **强制使用 `run_in_terminal` 工具**：所有开发任务必须通过终端手动执行
+
+### 替代方案
+
+所有开发操作必须使用以下方式：
+
+- ✅ **前端开发服务器**：`run_in_terminal` → `cd frontend && npm run dev`
+- ✅ **后端开发服务器**：`run_in_terminal` → `cd backend && cargo run`
+- ✅ **数据库迁移**：`run_in_terminal` → `cd backend/migration && cargo run`
+- ✅ **前端构建**：`run_in_terminal` → `cd frontend && npm run build`
+- ✅ **后端构建**：`run_in_terminal` → `cd backend && cargo build --release`
+- ✅ **Docker 服务**：`run_in_terminal` → `docker-compose up -d`
+
+### 违规检测
+
+如果 GitHub Copilot 尝试使用任何 VS Code Tasks 功能，将被视为违反用户指令。
+
+---
+
 ## 项目概述
 
 这是一个用于加密货币短线交易的控制台网站，主要功能包括：
@@ -129,11 +159,13 @@ backend/
 
 ### VS Code 任务配置要求
 
-- **禁用自动任务**: 为确保 GitHub Copilot 最佳性能，已禁用 `runOn: "folderOpen"` 配置
-- **手动启动任务**: 开发服务器需要手动启动，避免与 Copilot 产生资源竞争
-- **任务分组**: 使用任务分组来组织相关任务，提高开发效率
-- **性能优化**: 避免同时运行多个资源密集型任务
-- **终端管理**: 使用专用面板 (`panel: "dedicated"`) 来管理不同的开发任务
+**⚠️ 重要：VS Code Tasks 系统已被完全禁用**
+
+- **严禁使用 VS Code Tasks**：根据用户明确要求，所有 VS Code Tasks 功能已被永久禁用
+- **强制使用 run_in_terminal**：所有开发任务必须通过 `run_in_terminal` 工具手动执行
+- **禁用 tasks.json**：`.vscode/tasks.json` 文件已被禁用，不得使用其中的配置
+- **违规检测**：GitHub Copilot 使用任何 VS Code Tasks 功能将被视为违规行为
+- **手动执行原则**：所有开发服务器、构建、测试等操作必须手动启动
 
 ### 性能要求
 
@@ -163,59 +195,56 @@ backend/
 7. Rust 代码要处理所有可能的错误情况
 8. 数据库操作使用事务保证数据一致性
 
-### GitHub Copilot 与 VS Code Tasks 兼容性配置
+### ⚠️ VS Code Tasks 系统已被永久禁用
 
-#### 已知兼容性问题
+**重要说明**：根据用户明确要求，本项目已完全禁用 VS Code Tasks 系统。
 
-GitHub Copilot 与 VS Code Tasks 系统存在以下兼容性和性能问题：
+#### 禁用原因
 
-1. **资源竞争问题**：
-   - Copilot 和自动运行的 tasks（`runOn: "folderOpen"`）会竞争系统资源
-   - 同时运行可能导致 VS Code 响应变慢或内存使用过高
-   - 特别影响语言服务器性能和 IntelliSense 响应速度
+1. **用户明确要求**：项目所有者要求永久禁用 VS Code Tasks 功能
+2. **GitHub Copilot 兼容性**：避免资源竞争和性能问题
+3. **强制手动控制**：确保所有开发任务都通过手动方式执行
 
-2. **后台进程冲突**：
-   - 自动启动的开发服务器和 Copilot 后台进程可能产生冲突
-   - 长时间运行的 watch 任务会持续占用 CPU 资源
-   - 影响 Copilot 的代码建议质量和响应时间
+#### 禁用实施
 
-3. **终端状态管理**：
-   - VS Code 任务系统和 Copilot 的终端状态跟踪可能产生冲突
-   - 自动任务可能干扰 Copilot 的代码执行和调试功能
+- **`.vscode/tasks.json` 已被禁用**：文件仍存在但所有任务配置已被移除
+- **VS Code Tasks 工具禁用**：GitHub Copilot 不得使用 `run_vs_code_task` 或 `create_and_run_task`
+- **强制使用终端**：所有开发操作必须通过 `run_in_terminal` 工具执行
 
-#### 性能优化配置
+#### 开发命令参考
 
-基于以上兼容性问题，本项目采用以下优化配置：
+替代原有 VS Code Tasks 的手动命令：
 
-- **禁用自动任务**：所有 tasks.json 中移除 `"runOn": "folderOpen"` 配置
-- **手动启动模式**：开发服务器需要手动启动以避免资源竞争
-- **专用面板**：使用 `"panel": "dedicated"` 为每个任务分配独立终端
-- **后台任务标记**：适当使用 `"isBackground": true` 避免阻塞 UI
+```bash
+# 前端开发服务器
+cd frontend
+npm run dev
 
-#### 推荐的开发流程
+# 后端开发服务器
+cd backend
+cargo run
 
-为确保 GitHub Copilot 最佳性能，请按以下顺序手动启动服务：
+# 数据库迁移
+cd backend/migration
+cargo run
 
-1. **启动数据库服务**（如需要）：
-   - 使用 `Ctrl+Shift+P` → `Tasks: Run Task` → `🐳 Docker: Start All Services`
+# 前端构建
+cd frontend
+npm run build
 
-2. **启动后端开发服务器**：
-   - 使用 `Ctrl+Shift+P` → `Tasks: Run Task` → `Backend: Dev Server`
+# 后端构建
+cd backend
+cargo build --release
 
-3. **启动前端开发服务器**：
-   - 使用 `Ctrl+Shift+P` → `Tasks: Run Task` → `Frontend: Dev Server`
+# Docker 服务
+docker-compose up -d
+```
 
-4. **运行数据库迁移**（如需要）：
-   - 使用 `Ctrl+Shift+P` → `Tasks: Run Task` → `Database: Run Migration`
+#### 合规性要求
 
-#### 故障排除
-
-如果遇到 Copilot 性能问题：
-
-1. **检查运行中的任务**：停止所有不必要的后台任务
-2. **重启扩展宿主**：`Ctrl+Shift+P` → `Developer: Restart Extension Host`
-3. **使用扩展二分法**：`Help: Start Extension Bisect` 隔离问题扩展
-4. **监控资源使用**：通过任务管理器检查 VS Code 进程资源消耗
+- GitHub Copilot 必须遵守此禁用规则
+- 任何尝试使用 VS Code Tasks 的行为都将被视为违规
+- 所有开发任务必须通过 `run_in_terminal` 工具手动执行
 
 ## 测试要求
 

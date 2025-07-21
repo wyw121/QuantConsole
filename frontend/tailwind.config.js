@@ -37,6 +37,9 @@ export default {
         success: '#10b981',
         warning: '#f59e0b',
         error: '#ef4444',
+        border: '#334155', // dark-700
+        input: '#1e293b', // dark-800
+        ring: '#2563eb', // primary-600
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
