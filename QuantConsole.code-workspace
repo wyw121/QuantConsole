@@ -64,7 +64,8 @@
 		"terminal.integrated.defaultProfile.windows": "PowerShell",
 		"terminal.integrated.fontSize": 16,
         "terminal.integrated.tabs.title": "${workspaceFolderName}${separator}",
-        "terminal.integrated.tabs.description": "${task}${separator}${local}${separator}${cwdFolder}"
+		"terminal.integrated.tabs.description": "${task}${separator}${local}${separator}${cwdFolder}",
+		"powershell.cwd": "🎯 QuantConsole (Root)"
 	},
 	"extensions": {
 		"recommendations": [

@@ -13,7 +13,7 @@ pub async fn register(
     // 获取客户端信息
     let ip_address = req
         .connection_info()
-        .remote_addr()
+        .peer_addr()
         .unwrap_or("unknown")
         .to_string();
 
@@ -31,7 +31,7 @@ pub async fn register(
         Ok(response) => Ok(HttpResponse::Ok().json(ApiResponse::success(response))),
         Err(e) => {
             log::error!("注册失败: {}", e);
-            Ok(HttpResponse::BadRequest().json(ApiResponse::error(
+            Ok(HttpResponse::BadRequest().json(ApiResponse::<()>::error(
                 ErrorCode::ValidationError,
                 &e.to_string(),
             )))
@@ -47,7 +47,7 @@ pub async fn login(
     // 获取客户端信息
     let ip_address = req
         .connection_info()
-        .remote_addr()
+        .peer_addr()
         .unwrap_or("unknown")
         .to_string();
 
@@ -65,7 +65,7 @@ pub async fn login(
         Ok(response) => Ok(HttpResponse::Ok().json(ApiResponse::success(response))),
         Err(e) => {
             log::error!("登录失败: {}", e);
-            Ok(HttpResponse::BadRequest().json(ApiResponse::error(
+            Ok(HttpResponse::BadRequest().json(ApiResponse::<()>::error(
                 ErrorCode::AuthenticationError,
                 &e.to_string(),
             )))
@@ -82,7 +82,7 @@ pub async fn logout(
         .get("refresh_token")
         .and_then(|v| v.as_str())
         .ok_or_else(|| {
-            HttpResponse::BadRequest().json(ApiResponse::error(
+            HttpResponse::BadRequest().json(ApiResponse::<()>::error(
                 ErrorCode::ValidationError,
                 "缺少刷新令牌",
             ))
@@ -97,7 +97,7 @@ pub async fn logout(
         Ok(_) => Ok(HttpResponse::Ok().json(ApiResponse::success(json!({})))),
         Err(e) => {
             log::error!("登出失败: {}", e);
-            Ok(HttpResponse::InternalServerError().json(ApiResponse::error(
+            Ok(HttpResponse::InternalServerError().json(ApiResponse::<()>::error(
                 ErrorCode::InternalError,
                 "登出失败",
             )))
@@ -113,7 +113,7 @@ pub async fn refresh_token(
         .get("refresh_token")
         .and_then(|v| v.as_str())
         .ok_or_else(|| {
-            HttpResponse::BadRequest().json(ApiResponse::error(
+            HttpResponse::BadRequest().json(ApiResponse::<()>::error(
                 ErrorCode::ValidationError,
                 "缺少刷新令牌",
             ))
@@ -134,7 +134,7 @@ pub async fn refresh_token(
         }
         Err(e) => {
             log::error!("刷新令牌失败: {}", e);
-            Ok(HttpResponse::BadRequest().json(ApiResponse::error(
+            Ok(HttpResponse::BadRequest().json(ApiResponse::<()>::error(
                 ErrorCode::AuthenticationError,
                 &e.to_string(),
             )))
@@ -150,7 +150,7 @@ pub async fn setup_two_factor(
         Ok(response) => Ok(HttpResponse::Ok().json(ApiResponse::success(response))),
         Err(e) => {
             log::error!("设置双因素认证失败: {}", e);
-            Ok(HttpResponse::InternalServerError().json(ApiResponse::error(
+            Ok(HttpResponse::InternalServerError().json(ApiResponse::<()>::error(
                 ErrorCode::InternalError,
                 "设置双因素认证失败",
             )))
@@ -167,7 +167,7 @@ pub async fn confirm_two_factor(
         .get("code")
         .and_then(|v| v.as_str())
         .ok_or_else(|| {
-            HttpResponse::BadRequest().json(ApiResponse::error(
+            HttpResponse::BadRequest().json(ApiResponse::<()>::error(
                 ErrorCode::ValidationError,
                 "缺少验证码",
             ))
@@ -187,7 +187,7 @@ pub async fn confirm_two_factor(
         })))),
         Err(e) => {
             log::error!("确认双因素认证失败: {}", e);
-            Ok(HttpResponse::BadRequest().json(ApiResponse::error(
+            Ok(HttpResponse::BadRequest().json(ApiResponse::<()>::error(
                 ErrorCode::ValidationError,
                 &e.to_string(),
             )))

@@ -1,4 +1,5 @@
 use sea_orm::entity::prelude::*;
+use sea_orm::{ActiveModelTrait, Set};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -17,7 +18,7 @@ pub struct Model {
     pub user_agent: String,
     pub location: Option<String>,
 
-    pub severity: String, // low, medium, high
+    pub severity: String,         // low, medium, high
     pub metadata: Option<String>, // JSON string for additional data
 
     pub created_at: DateTimeWithTimeZone,
@@ -43,7 +44,9 @@ impl ActiveModelBehavior for ActiveModel {
     fn new() -> Self {
         Self {
             id: Set(Uuid::new_v4()),
-            created_at: Set(chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())),
+            created_at: Set(
+                chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())
+            ),
             ..ActiveModelTrait::default()
         }
     }

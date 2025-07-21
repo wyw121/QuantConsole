@@ -48,6 +48,15 @@ env_logger = "0.10"
 anyhow = "1.0"
 thiserror = "1.0"
 
+# 异步工具
+futures-util = "0.3"
+
+# 随机数生成
+rand = "0.8"
+
+# Base32 编码
+base32 = "0.4"
+
 # 验证
 validator = { version = "0.16", features = ["derive"] }
 

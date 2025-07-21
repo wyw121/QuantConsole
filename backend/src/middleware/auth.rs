@@ -2,7 +2,7 @@ use actix_web::{
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     error::ErrorUnauthorized,
     http::header::AUTHORIZATION,
-    web, Error, HttpMessage,
+    Error, HttpMessage,
 };
 use futures_util::future::LocalBoxFuture;
 use std::{

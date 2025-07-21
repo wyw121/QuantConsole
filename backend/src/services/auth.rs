@@ -2,15 +2,16 @@ use anyhow::Result;
 use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use rand::Rng;
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
-use totp_rs::{Algorithm, Secret, TOTP};
+use totp_rs::{Algorithm, TOTP};
 use uuid::Uuid;
 
 use crate::models::{
     user::{self, Entity as User},
     user_session::{self, Entity as UserSession},
-    security_event::{self, Entity as SecurityEvent},
+    security_event::{self},
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -275,23 +276,28 @@ impl AuthService {
             .ok_or_else(|| anyhow::anyhow!("用户不存在"))?;
 
         // 生成密钥
-        let secret = Secret::generate_secret();
-        let totp = TOTP::new(
+        let mut rng = rand::thread_rng();
+        let secret: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
+        let _totp = TOTP::new(
             Algorithm::SHA1,
             6,
             1,
             30,
-            secret.to_bytes().unwrap(),
-            Some("QuantConsole".to_string()),
-            user.email.clone(),
+            secret.clone(),
         )?;
 
         // 生成二维码 URL
-        let qr_code_url = totp.get_qr()?;
+        let qr_code_url = format!(
+            "otpauth://totp/{}:{}?secret={}&issuer={}",
+            "QuantConsole",
+            user.email,
+            base32::encode(base32::Alphabet::RFC4648 { padding: true }, &secret),
+            "QuantConsole"
+        );
 
         // 保存密钥到数据库
         let mut user: user::ActiveModel = user.into();
-        user.two_factor_secret = Set(Some(secret.to_encoded()));
+        user.two_factor_secret = Set(Some(base32::encode(base32::Alphabet::RFC4648 { padding: true }, &secret)));
         user.update(&self.db).await?;
 
         // 生成备份码
@@ -299,7 +305,7 @@ impl AuthService {
 
         Ok(TwoFactorSetupResponse {
             qr_code_url,
-            secret_key: secret.to_encoded(),
+            secret_key: base32::encode(base32::Alphabet::RFC4648 { padding: true }, &secret),
             backup_codes,
         })
     }
@@ -334,16 +340,15 @@ impl AuthService {
     }
 
     fn verify_two_factor_code(&self, user: &user::Model, code: &str) -> Result<bool> {
-        if let Some(secret) = &user.two_factor_secret {
-            let secret = Secret::Encoded(secret.clone());
+        if let Some(secret_encoded) = &user.two_factor_secret {
+            let secret = base32::decode(base32::Alphabet::RFC4648 { padding: true }, secret_encoded)
+                .ok_or_else(|| anyhow::anyhow!("无效的密钥格式"))?;
             let totp = TOTP::new(
                 Algorithm::SHA1,
                 6,
                 1,
                 30,
-                secret.to_bytes().unwrap(),
-                Some("QuantConsole".to_string()),
-                user.email.clone(),
+                secret,
             )?;
 
             Ok(totp.check_current(code)?)
@@ -450,10 +455,11 @@ impl AuthService {
     fn generate_backup_codes(&self) -> Vec<String> {
         (0..8)
             .map(|_| {
+                let mut rng = rand::thread_rng();
                 format!(
                     "{:04}-{:04}",
-                    rand::random::<u16>() % 10000,
-                    rand::random::<u16>() % 10000
+                    rng.gen_range(0..10000),
+                    rng.gen_range(0..10000)
                 )
             })
             .collect()

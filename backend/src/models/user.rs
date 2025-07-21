@@ -1,4 +1,5 @@
 use sea_orm::entity::prelude::*;
+use sea_orm::{ActiveModelTrait, Set};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -72,17 +73,13 @@ impl ActiveModelBehavior for ActiveModel {
     fn new() -> Self {
         Self {
             id: Set(Uuid::new_v4()),
-            created_at: Set(chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())),
-            updated_at: Set(chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())),
+            created_at: Set(
+                chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())
+            ),
+            updated_at: Set(
+                chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())
+            ),
             ..ActiveModelTrait::default()
         }
-    }
-
-    fn before_save<C>(mut self, _db: &C, _insert: bool) -> Result<Self, DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        self.updated_at = Set(chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap()));
-        Ok(self)
     }
 }
