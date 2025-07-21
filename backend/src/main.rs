@@ -100,7 +100,12 @@ async fn main() -> std::io::Result<()> {
                     )
                     // 用户路由 (需要身份验证)
                     .service(
-                        web::scope("/user").wrap(JwtAuth::new(auth_service.clone())), // 这里可以添加用户相关的路由
+                        web::scope("/user")
+                            .wrap(JwtAuth::new(auth_service.clone()))
+                            .route("/devices", web::get().to(get_active_devices))
+                            .route("/devices/{device_id}/revoke", web::post().to(revoke_device_access))
+                            .route("/logout-all", web::post().to(logout_all_devices))
+                            .route("/security-events", web::get().to(get_security_events)),
                     ),
             )
     })

@@ -9,18 +9,24 @@ use totp_rs::{Algorithm, TOTP};
 use uuid::Uuid;
 
 use crate::models::{
+    security_event::{self},
     user::{self, Entity as User},
     user_session::{self, Entity as UserSession},
-    security_event::{self},
 };
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String, // 用户 ID
     pub email: String,
+    pub username: String,
     pub role: String,
-    pub exp: i64, // 过期时间
-    pub iat: i64, // 签发时间
+    pub session_id: String,         // 会话 ID
+    pub device_id: Option<String>,  // 设备 ID
+    pub ip_address: Option<String>, // IP 地址
+    pub exp: i64,                   // 过期时间
+    pub iat: i64,                   // 签发时间
+    pub iss: String,                // 签发者
+    pub aud: String,                // 受众
 }
 
 #[derive(Debug, Deserialize)]
@@ -78,6 +84,242 @@ pub struct AuthService {
 impl AuthService {
     pub fn new(db: DatabaseConnection, jwt_secret: String) -> Self {
         Self { db, jwt_secret }
+    }
+
+    /// 生成设备指纹
+    pub fn generate_device_fingerprint(user_agent: &str, ip_address: &str) -> String {
+        use sha2::{Digest, Sha256};
+
+        let fingerprint_data = format!("{}:{}", user_agent, ip_address);
+        let mut hasher = Sha256::new();
+        hasher.update(fingerprint_data.as_bytes());
+        let result = hasher.finalize();
+
+        format!("{:x}", result)[..32].to_string()
+    }
+
+    /// 验证会话安全性
+    pub async fn verify_session_security(
+        &self,
+        user_id: Uuid,
+        session_id: &str,
+        ip_address: &str,
+        user_agent: &str,
+    ) -> Result<bool> {
+        // 查找会话
+        let session = UserSession::find()
+            .filter(user_session::Column::UserId.eq(user_id))
+            .filter(user_session::Column::Id.eq(session_id))
+            .filter(user_session::Column::IsActive.eq(true))
+            .one(&self.db)
+            .await?;
+
+        if let Some(session) = session {
+            // 检查IP地址是否匹配
+            if session.ip_address != ip_address {
+                self.log_security_event(
+                    user_id,
+                    "suspicious_ip".to_string(),
+                    format!(
+                        "会话IP地址发生变化: {} -> {}",
+                        session.ip_address, ip_address
+                    ),
+                    ip_address.to_string(),
+                    user_agent.to_string(),
+                    "high".to_string(),
+                )
+                .await?;
+
+                return Ok(false);
+            }
+
+            // 检查用户代理是否匹配
+            if session.user_agent != user_agent {
+                self.log_security_event(
+                    user_id,
+                    "suspicious_user_agent".to_string(),
+                    "会话用户代理发生变化".to_string(),
+                    ip_address.to_string(),
+                    user_agent.to_string(),
+                    "medium".to_string(),
+                )
+                .await?;
+            }
+
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
+    /// 获取用户的活跃设备列表
+    pub async fn get_active_devices(&self, user_id: Uuid) -> Result<Vec<serde_json::Value>> {
+        let sessions = UserSession::find()
+            .filter(user_session::Column::UserId.eq(user_id))
+            .filter(user_session::Column::IsActive.eq(true))
+            .all(&self.db)
+            .await?;
+
+        let devices: Vec<serde_json::Value> = sessions
+            .into_iter()
+            .map(|session| {
+                serde_json::json!({
+                    "deviceId": session.id,
+                    "deviceName": self.parse_device_name(&session.user_agent),
+                    "browser": self.parse_browser(&session.user_agent),
+                    "os": self.parse_os(&session.user_agent),
+                    "ipAddress": session.ip_address,
+                    "location": session.location,
+                    "lastSeen": session.last_accessed_at,
+                    "isCurrentDevice": false, // 需要额外逻辑判断
+                    "isTrusted": false, // 可以添加信任设备逻辑
+                })
+            })
+            .collect();
+
+        Ok(devices)
+    }
+
+    /// 撤销设备访问权限
+    pub async fn revoke_device_access(&self, user_id: Uuid, device_id: &str) -> Result<()> {
+        // 删除指定设备的会话
+        UserSession::delete_many()
+            .filter(user_session::Column::UserId.eq(user_id))
+            .filter(user_session::Column::Id.eq(device_id))
+            .exec(&self.db)
+            .await?;
+
+        // 记录安全事件
+        self.log_security_event(
+            user_id,
+            "device_revoked".to_string(),
+            format!("设备访问权限已撤销: {}", device_id),
+            "system".to_string(),
+            "system".to_string(),
+            "low".to_string(),
+        )
+        .await?;
+
+        Ok(())
+    }
+
+    /// 登出所有设备
+    pub async fn logout_all_devices(&self, user_id: Uuid) -> Result<()> {
+        UserSession::delete_many()
+            .filter(user_session::Column::UserId.eq(user_id))
+            .exec(&self.db)
+            .await?;
+
+        self.log_security_event(
+            user_id,
+            "logout_all_devices".to_string(),
+            "用户登出所有设备".to_string(),
+            "system".to_string(),
+            "system".to_string(),
+            "low".to_string(),
+        )
+        .await?;
+
+        Ok(())
+    }
+
+    /// 解析设备名称
+    fn parse_device_name(&self, user_agent: &str) -> String {
+        if user_agent.contains("Mobile") {
+            "移动设备".to_string()
+        } else if user_agent.contains("Tablet") {
+            "平板设备".to_string()
+        } else {
+            "桌面设备".to_string()
+        }
+    }
+
+    /// 解析浏览器
+    fn parse_browser(&self, user_agent: &str) -> String {
+        if user_agent.contains("Chrome") {
+            "Chrome".to_string()
+        } else if user_agent.contains("Firefox") {
+            "Firefox".to_string()
+        } else if user_agent.contains("Safari") {
+            "Safari".to_string()
+        } else if user_agent.contains("Edge") {
+            "Edge".to_string()
+        } else {
+            "Unknown".to_string()
+        }
+    }
+
+    /// 获取用户安全事件
+    pub async fn get_security_events(
+        &self,
+        user_id: Uuid,
+        query: crate::handlers::device::SecurityEventQuery,
+    ) -> Result<serde_json::Value> {
+        use sea_orm::{Condition, Order, PaginatorTrait};
+
+        let page = query.page.unwrap_or(1);
+        let limit = query.limit.unwrap_or(20);
+
+        let mut condition = Condition::all().add(security_event::Column::UserId.eq(user_id));
+
+        if let Some(event_type) = query.event_type {
+            condition = condition.add(security_event::Column::EventType.eq(event_type));
+        }
+
+        if let Some(severity) = query.severity {
+            condition = condition.add(security_event::Column::Severity.eq(severity));
+        }
+
+        let paginator = security_event::Entity::find()
+            .filter(condition)
+            .order_by_desc(security_event::Column::CreatedAt)
+            .paginate(&self.db, limit);
+
+        let total = paginator.num_items().await?;
+        let events = paginator.fetch_page(page - 1).await?;
+
+        let events_json: Vec<serde_json::Value> = events
+            .into_iter()
+            .map(|event| {
+                serde_json::json!({
+                    "id": event.id,
+                    "eventType": event.event_type,
+                    "description": event.description,
+                    "ipAddress": event.ip_address,
+                    "location": event.location,
+                    "severity": event.severity,
+                    "timestamp": event.created_at,
+                    "userAgent": event.user_agent,
+                })
+            })
+            .collect();
+
+        Ok(serde_json::json!({
+            "events": events_json,
+            "pagination": {
+                "total": total,
+                "page": page,
+                "limit": limit,
+                "totalPages": (total as f64 / limit as f64).ceil() as u64,
+            }
+        }))
+    }
+
+    /// 解析操作系统
+    fn parse_os(&self, user_agent: &str) -> String {
+        if user_agent.contains("Windows") {
+            "Windows".to_string()
+        } else if user_agent.contains("Mac") {
+            "macOS".to_string()
+        } else if user_agent.contains("Linux") {
+            "Linux".to_string()
+        } else if user_agent.contains("Android") {
+            "Android".to_string()
+        } else if user_agent.contains("iOS") {
+            "iOS".to_string()
+        } else {
+            "Unknown".to_string()
+        }
     }
 
     pub async fn register(
@@ -196,7 +438,9 @@ impl AuthService {
 
         // 更新最后登录信息
         let mut user: user::ActiveModel = user.into();
-        user.last_login_at = Set(Some(Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())));
+        user.last_login_at = Set(Some(
+            Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap()),
+        ));
         user.last_login_ip = Set(Some(ip_address.clone()));
         let user = user.update(&self.db).await?;
 
@@ -247,7 +491,8 @@ impl AuthService {
             .ok_or_else(|| anyhow::anyhow!("无效的刷新令牌"))?;
 
         // 检查会话是否过期
-        if session.expires_at < Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap()) {
+        if session.expires_at < Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())
+        {
             return Err(anyhow::anyhow!("刷新令牌已过期"));
         }
 
@@ -263,7 +508,8 @@ impl AuthService {
         // 更新会话
         let mut session: user_session::ActiveModel = session.into();
         session.refresh_token = Set(new_refresh_token.clone());
-        session.last_accessed_at = Set(Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap()));
+        session.last_accessed_at =
+            Set(Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap()));
         session.update(&self.db).await?;
 
         Ok((access_token, new_refresh_token))
@@ -278,13 +524,7 @@ impl AuthService {
         // 生成密钥
         let mut rng = rand::thread_rng();
         let secret: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
-        let _totp = TOTP::new(
-            Algorithm::SHA1,
-            6,
-            1,
-            30,
-            secret.clone(),
-        )?;
+        let _totp = TOTP::new(Algorithm::SHA1, 6, 1, 30, secret.clone())?;
 
         // 生成二维码 URL
         let qr_code_url = format!(
@@ -297,7 +537,10 @@ impl AuthService {
 
         // 保存密钥到数据库
         let mut user: user::ActiveModel = user.into();
-        user.two_factor_secret = Set(Some(base32::encode(base32::Alphabet::RFC4648 { padding: true }, &secret)));
+        user.two_factor_secret = Set(Some(base32::encode(
+            base32::Alphabet::RFC4648 { padding: true },
+            &secret,
+        )));
         user.update(&self.db).await?;
 
         // 生成备份码
@@ -310,7 +553,11 @@ impl AuthService {
         })
     }
 
-    pub async fn verify_and_enable_two_factor(&self, user_id: Uuid, code: String) -> Result<Vec<String>> {
+    pub async fn verify_and_enable_two_factor(
+        &self,
+        user_id: Uuid,
+        code: String,
+    ) -> Result<Vec<String>> {
         let user = User::find_by_id(user_id)
             .one(&self.db)
             .await?
@@ -341,15 +588,10 @@ impl AuthService {
 
     fn verify_two_factor_code(&self, user: &user::Model, code: &str) -> Result<bool> {
         if let Some(secret_encoded) = &user.two_factor_secret {
-            let secret = base32::decode(base32::Alphabet::RFC4648 { padding: true }, secret_encoded)
-                .ok_or_else(|| anyhow::anyhow!("无效的密钥格式"))?;
-            let totp = TOTP::new(
-                Algorithm::SHA1,
-                6,
-                1,
-                30,
-                secret,
-            )?;
+            let secret =
+                base32::decode(base32::Alphabet::RFC4648 { padding: true }, secret_encoded)
+                    .ok_or_else(|| anyhow::anyhow!("无效的密钥格式"))?;
+            let totp = TOTP::new(Algorithm::SHA1, 6, 1, 30, secret)?;
 
             Ok(totp.check_current(code)?)
         } else {
@@ -362,20 +604,35 @@ impl AuthService {
         let access_exp = now + Duration::hours(1);
         let refresh_exp = now + Duration::days(7);
 
+        // 生成会话ID
+        let session_id = uuid::Uuid::new_v4().to_string();
+
         let access_claims = Claims {
             sub: user.id.to_string(),
             email: user.email.clone(),
+            username: user.username.clone(),
             role: user.role.clone(),
+            session_id: session_id.clone(),
+            device_id: None,  // 可以从请求中获取设备指纹
+            ip_address: None, // 可以从请求中获取IP地址
             exp: access_exp.timestamp(),
             iat: now.timestamp(),
+            iss: "QuantConsole".to_string(),
+            aud: "QuantConsole-Client".to_string(),
         };
 
         let refresh_claims = Claims {
             sub: user.id.to_string(),
             email: user.email.clone(),
+            username: user.username.clone(),
             role: user.role.clone(),
+            session_id,
+            device_id: None,
+            ip_address: None,
             exp: refresh_exp.timestamp(),
             iat: now.timestamp(),
+            iss: "QuantConsole".to_string(),
+            aud: "QuantConsole-Client".to_string(),
         };
 
         let access_token = encode(
@@ -405,7 +662,10 @@ impl AuthService {
             refresh_token: Set(refresh_token.to_string()),
             ip_address: Set(ip_address),
             user_agent: Set(user_agent),
-            expires_at: Set(Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap()) + Duration::days(7)),
+            expires_at: Set(
+                Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())
+                    + Duration::days(7),
+            ),
             ..Default::default()
         };
 

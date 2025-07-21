@@ -1,97 +1,119 @@
-import { Button } from '@/components/Button'
-import { Input, PasswordInput } from '@/components/Input'
-import { Card, CardBody, CardHeader } from '@/components/UI'
-import { useAuth } from '@/hooks'
-import type { LoginRequest } from '@/types'
-import { isValidEmail } from '@/utils'
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Button } from "@/components/Button";
+import { Input, PasswordInput } from "@/components/Input";
+import { QuickLogin } from "@/components/QuickLogin";
+import { Card, CardBody, CardHeader } from "@/components/UI";
+import { useAuth } from "@/hooks";
+import type { LoginRequest } from "@/types";
+import { isValidEmail } from "@/utils";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export const LoginPage: React.FC = () => {
-  const navigate = useNavigate()
-  const { login, isLoading, error } = useAuth()
+  const navigate = useNavigate();
+  const { login, isLoading, error } = useAuth();
 
   const [formData, setFormData] = useState<LoginRequest>({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
     rememberMe: false,
-    twoFactorCode: '',
-  })
+    twoFactorCode: "",
+  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [showTwoFactor, setShowTwoFactor] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+
+  // 社交登录处理
+  const handleSocialLogin = async (provider: "google" | "github" | "apple") => {
+    try {
+      // TODO: 实现社交登录逻辑
+      console.log(`${provider} 登录功能开发中...`);
+
+      // 临时模拟成功登录（开发阶段）
+      // const mockUser = {
+      //   id: '1',
+      //   email: `user@${provider}.com`,
+      //   username: `${provider}_user`,
+      //   firstName: 'Test',
+      //   lastName: 'User',
+      //   isEmailVerified: true,
+      //   isTwoFactorEnabled: false,
+      //   role: 'user' as const,
+      //   createdAt: new Date().toISOString(),
+      //   updatedAt: new Date().toISOString(),
+      // }
+
+      // navigate('/dashboard')
+    } catch (error) {
+      console.error("社交登录失败:", error);
+    }
+  };
 
   // 表单验证
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     if (!formData.email) {
-      newErrors.email = '请输入邮箱地址'
+      newErrors.email = "请输入邮箱地址";
     } else if (!isValidEmail(formData.email)) {
-      newErrors.email = '请输入有效的邮箱地址'
+      newErrors.email = "请输入有效的邮箱地址";
     }
 
     if (!formData.password) {
-      newErrors.password = '请输入密码'
+      newErrors.password = "请输入密码";
     }
 
     if (showTwoFactor && !formData.twoFactorCode) {
-      newErrors.twoFactorCode = '请输入双因素认证代码'
+      newErrors.twoFactorCode = "请输入双因素认证代码";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // 处理表单提交
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!validateForm()) return
+    if (!validateForm()) return;
 
     try {
-      await login(formData)
-      navigate('/dashboard')
+      await login(formData);
+      navigate("/dashboard");
     } catch (error: any) {
       // 检查是否需要双因素认证
-      if (error.message?.includes('2FA') || error.message?.includes('双因素')) {
-        setShowTwoFactor(true)
+      if (error.message?.includes("2FA") || error.message?.includes("双因素")) {
+        setShowTwoFactor(true);
       }
     }
-  }
+  };
 
   // 处理输入变化
   const handleChange = (field: keyof LoginRequest, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // 清除对应字段的错误
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark-950 px-4">
       <div className="w-full max-w-md">
         {/* 头部 Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold gradient-text">
-            QuantConsole
-          </h1>
-          <p className="text-gray-400 mt-2">
-            专业的加密货币交易控制台
-          </p>
+          <h1 className="text-3xl font-bold gradient-text">QuantConsole</h1>
+          <p className="text-gray-400 mt-2">专业的加密货币交易控制台</p>
         </div>
 
         <Card>
           <CardHeader>
             <h2 className="text-xl font-semibold text-gray-100">
-              {showTwoFactor ? '双因素认证' : '登录账户'}
+              {showTwoFactor ? "双因素认证" : "登录账户"}
             </h2>
             <p className="text-gray-400 mt-1">
               {showTwoFactor
-                ? '请输入您的双因素认证代码'
-                : '请输入您的登录凭据'
-              }
+                ? "请输入您的双因素认证代码"
+                : "请输入您的登录凭据"}
             </p>
           </CardHeader>
 
@@ -109,7 +131,7 @@ export const LoginPage: React.FC = () => {
                     label="邮箱地址"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleChange('email', e.target.value)}
+                    onChange={(e) => handleChange("email", e.target.value)}
                     error={errors.email}
                     placeholder="请输入您的邮箱地址"
                     autoComplete="email"
@@ -119,7 +141,7 @@ export const LoginPage: React.FC = () => {
                   <PasswordInput
                     label="密码"
                     value={formData.password}
-                    onChange={(e) => handleChange('password', e.target.value)}
+                    onChange={(e) => handleChange("password", e.target.value)}
                     error={errors.password}
                     placeholder="请输入您的密码"
                     autoComplete="current-password"
@@ -131,7 +153,9 @@ export const LoginPage: React.FC = () => {
                       <input
                         type="checkbox"
                         checked={formData.rememberMe}
-                        onChange={(e) => handleChange('rememberMe', e.target.checked)}
+                        onChange={(e) =>
+                          handleChange("rememberMe", e.target.checked)
+                        }
                         className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                       />
                       <span className="ml-2 text-sm text-gray-300">记住我</span>
@@ -149,8 +173,10 @@ export const LoginPage: React.FC = () => {
                 <Input
                   label="双因素认证代码"
                   type="text"
-                  value={formData.twoFactorCode || ''}
-                  onChange={(e) => handleChange('twoFactorCode', e.target.value)}
+                  value={formData.twoFactorCode || ""}
+                  onChange={(e) =>
+                    handleChange("twoFactorCode", e.target.value)
+                  }
                   error={errors.twoFactorCode}
                   placeholder="请输入 6 位验证代码"
                   maxLength={6}
@@ -166,7 +192,7 @@ export const LoginPage: React.FC = () => {
                 loading={isLoading}
                 disabled={isLoading}
               >
-                {showTwoFactor ? '验证并登录' : '登录'}
+                {showTwoFactor ? "验证并登录" : "登录"}
               </Button>
             </form>
 
@@ -182,9 +208,17 @@ export const LoginPage: React.FC = () => {
               </div>
             )}
 
+            {/* 快捷登录 */}
+            {!showTwoFactor && (
+              <QuickLogin
+                onSocialLogin={handleSocialLogin}
+                isLoading={isLoading}
+              />
+            )}
+
             <div className="mt-6 text-center">
               <p className="text-gray-400">
-                还没有账户？{' '}
+                还没有账户？{" "}
                 <Link
                   to="/auth/register"
                   className="text-primary-400 hover:text-primary-300 font-medium"
@@ -199,17 +233,23 @@ export const LoginPage: React.FC = () => {
         {/* 安全提示 */}
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
-            登录即表示您同意我们的{' '}
-            <Link to="/terms" className="text-primary-400 hover:text-primary-300">
+            登录即表示您同意我们的{" "}
+            <Link
+              to="/terms"
+              className="text-primary-400 hover:text-primary-300"
+            >
               服务条款
-            </Link>
-            {' '}和{' '}
-            <Link to="/privacy" className="text-primary-400 hover:text-primary-300">
+            </Link>{" "}
+            和{" "}
+            <Link
+              to="/privacy"
+              className="text-primary-400 hover:text-primary-300"
+            >
               隐私政策
             </Link>
           </p>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

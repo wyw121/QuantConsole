@@ -33,6 +33,7 @@ bcrypt = "0.15"
 uuid = { version = "1.6", features = ["v4", "serde"] }
 totp-rs = "5.4"
 qrcode = "0.14"
+sha2 = "0.10"
 
 # 时间处理
 chrono = { version = "0.4", features = ["serde"] }
