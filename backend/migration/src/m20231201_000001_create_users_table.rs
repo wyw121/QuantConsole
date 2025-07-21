@@ -63,7 +63,10 @@ impl MigrationTrait for Migration {
                             .default(true),
                     )
                     .col(ColumnDef::new(Users::EmailVerificationToken).string_len(255))
-                    .col(ColumnDef::new(Users::EmailVerificationExpiresAt).timestamp_with_time_zone())
+                    .col(
+                        ColumnDef::new(Users::EmailVerificationExpiresAt)
+                            .timestamp_with_time_zone(),
+                    )
                     .col(ColumnDef::new(Users::PasswordResetToken).string_len(255))
                     .col(ColumnDef::new(Users::PasswordResetExpiresAt).timestamp_with_time_zone())
                     .col(ColumnDef::new(Users::LastLoginAt).timestamp_with_time_zone())
@@ -114,7 +117,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(Iden)]
-enum Users {
+pub enum Users {
     Table,
     Id,
     Email,

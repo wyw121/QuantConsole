@@ -3,30 +3,15 @@ setlocal
 
 echo 🚀 启动 QuantConsole 开发环境...
 
-REM 检查 Docker 是否运行
-docker info >nul 2>&1
+REM 检查 MySQL 服务是否运行
+sc query MySQL 2>nul | find "RUNNING" >nul
 if %errorlevel% neq 0 (
-    echo ❌ Docker 未运行，请启动 Docker Desktop
+    echo ❌ MySQL 服务未运行，请启动 MySQL 服务
+    echo 提示: 运行 'net start MySQL' 或通过服务管理器启动
     exit /b 1
 )
 
-REM 启动数据库服务
-echo 📦 启动数据库服务...
-docker-compose up -d mysql redis
-
-REM 等待数据库启动
-echo ⏳ 等待数据库启动...
-timeout /t 10 /nobreak >nul
-
-:wait_mysql
-docker exec quantconsole-mysql mysqladmin ping -h"localhost" --silent >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ⏳ 等待 MySQL 启动...
-    timeout /t 5 /nobreak >nul
-    goto wait_mysql
-)
-
-echo ✅ 数据库已启动
+echo ✅ 数据库服务已运行
 
 REM 启动后端
 echo 🦀 启动 Rust 后端...
@@ -45,13 +30,8 @@ echo.
 echo 🎉 QuantConsole 开发环境已启动！
 echo 前端访问地址: http://localhost:3000
 echo 后端访问地址: http://localhost:8080
-echo 数据库管理: http://localhost:8081
 echo.
-echo 按任意键停止所有服务...
+echo 按任意键关闭启动窗口...
 pause >nul
-
-REM 停止服务
-echo 🛑 正在停止服务...
-docker-compose down
 
 endlocal

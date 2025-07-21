@@ -62,8 +62,9 @@
 		// 终端配置 - 显示简洁的标签名称
 		"terminal.integrated.tabs.enabled": true,
 		"terminal.integrated.defaultProfile.windows": "PowerShell",
-		"terminal.integrated.fontSize": 16
-
+		"terminal.integrated.fontSize": 16,
+        "terminal.integrated.tabs.title": "${workspaceFolderName}${separator}",
+        "terminal.integrated.tabs.description": "${task}${separator}${local}${separator}${cwdFolder}"
 	},
 	"extensions": {
 		"recommendations": [

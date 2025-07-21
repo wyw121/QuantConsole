@@ -8,61 +8,52 @@ echo.
 echo 🔍 服务状态检查
 echo --------------------------------
 
-REM 检查服务状态函数的替代方案
-set services[0]=quantconsole-mysql
-set services[1]=quantconsole-redis
-set services[2]=quantconsole-backend
-set services[3]=quantconsole-frontend
-set services[4]=quantconsole-nginx
+REM 检查进程是否运行
+tasklist /fi "imagename eq quantconsole*" /fo csv 2>nul | find /i "quantconsole" >nul
+if %errorlevel% equ 0 (
+    echo ✅ QuantConsole 后端服务: 运行中
+) else (
+    echo ❌ QuantConsole 后端服务: 已停止
+)
 
-set service_names[0]=MySQL 数据库
-set service_names[1]=Redis 缓存
-set service_names[2]=后端服务
-set service_names[3]=前端服务
-set service_names[4]=Nginx 代理
-
-for /L %%i in (0,1,4) do (
-    docker ps --format "table {{.Names}}" | findstr "!services[%%i]!" >nul 2>&1
-    if !errorlevel! equ 0 (
-        echo ✅ !service_names[%%i]!: 运行中
-    ) else (
-        echo ❌ !service_names[%%i]!: 已停止
-    )
+REM 检查 MySQL 服务
+sc query MySQL 2>nul | find "RUNNING" >nul
+if %errorlevel% equ 0 (
+    echo ✅ MySQL 数据库: 运行中
+) else (
+    echo ❌ MySQL 数据库: 已停止
 )
 
 echo.
 echo 🏥 健康状态检查
 echo --------------------------------
 
-REM 检查前端健康状态
-powershell -Command "try { Invoke-WebRequest -Uri 'http://localhost/health' -UseBasicParsing | Out-Null; Write-Host '✅ 前端服务: 健康' } catch { Write-Host '❌ 前端服务: 不健康' }"
+REM 检查前端健康状态（假设前端在开发服务器上运行）
+powershell -Command "try { Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing | Out-Null; Write-Host '✅ 前端服务: 健康' } catch { Write-Host '❌ 前端服务: 不健康' }"
 
 REM 检查后端健康状态
-powershell -Command "try { Invoke-WebRequest -Uri 'http://localhost/api/health' -UseBasicParsing | Out-Null; Write-Host '✅ 后端API: 健康' } catch { Write-Host '❌ 后端API: 不健康' }"
+powershell -Command "try { Invoke-WebRequest -Uri 'http://localhost:8080/api/health' -UseBasicParsing | Out-Null; Write-Host '✅ 后端API: 健康' } catch { Write-Host '❌ 后端API: 不健康' }"
 
 echo.
 echo 📈 资源使用情况
 echo --------------------------------
 
-REM 显示容器资源使用情况
-docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}" 2>nul | findstr quantconsole
+REM 显示进程资源使用情况
+tasklist /fi "imagename eq quantconsole*" /fo table
 
 echo.
 echo 💾 磁盘使用情况
 echo --------------------------------
 
-REM 显示 Docker 磁盘使用情况
-docker system df
+REM 显示当前目录磁盘使用情况
+dir /-c /s
 
 echo.
-echo 📝 最近日志 (最新10条)
+echo 📝 系统日志
 echo --------------------------------
 
-REM 显示最近的日志
-docker-compose logs --tail=10 2>nul
-if %errorlevel% neq 0 (
-    docker-compose -f docker-compose.prod.yml logs --tail=10 2>nul
-)
+REM 可以在这里添加日志文件查看逻辑
+echo 请查看应用程序日志文件或 Windows 事件查看器
 
 echo.
 echo 监控完成

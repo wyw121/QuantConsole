@@ -47,8 +47,7 @@ QuantConsole 是一个现代化的加密货币短线交易控制台网站，为�
 - **Redis** - 缓存和会话存储
 
 ### 开发工具
-- **Docker** - 容器化部署
-- **Docker Compose** - 多容器应用编排
+- **VS Code** - 代码编辑器和开发环境
 
 ### 安全特性
 - **密码加密** - BCrypt 哈希算法
@@ -83,7 +82,6 @@ QuantConsole/
 │   └── Cargo.toml
 ├── database/                 # 数据库相关文件
 │   └── init.sql            # 数据库初始化脚本
-├── docker-compose.yml        # Docker 编排配置
 └── README.md
 ```
 
@@ -93,7 +91,7 @@ QuantConsole/
 
 - Node.js 18+ 和 npm/yarn
 - Rust 1.70+ 和 Cargo
-- MySQL 8.0+ 或 Docker
+- MySQL 8.0+
 - Git
 
 ### 开发环境部署
@@ -125,13 +123,25 @@ cd QuantConsole
 
 ### 2. 启动数据库服务
 
-使用 Docker Compose 启动 MySQL 和 Redis：
+安装并启动 MySQL 服务：
 
-```bash
-docker-compose up -d mysql redis
+1. **Windows:** 下载并安装 [MySQL Community Server](https://dev.mysql.com/downloads/mysql/)
+2. **使用包管理器:**
+   ```bash
+   # Windows (Chocolatey)
+   choco install mysql
+
+   # 或使用 Scoop
+   scoop install mysql
+   ```
+
+创建数据库：
+```sql
+CREATE DATABASE quantconsole;
+CREATE USER 'quantconsole'@'localhost' IDENTIFIED BY 'quantconsole123';
+GRANT ALL PRIVILEGES ON quantconsole.* TO 'quantconsole'@'localhost';
+FLUSH PRIVILEGES;
 ```
-
-等待数据库启动完成后，访问 http://localhost:8081 使用 phpMyAdmin 管理数据库。
 
 ### 3. 配置环境变量
 
@@ -273,27 +283,26 @@ cp your-key.pem nginx/ssl/key.pem
 
 ### 部署方式
 
-**方法一：一键部署脚本**
+**手动部署到 Windows 服务器**
 
-*Windows:*
+1. **构建前端:**
 ```cmd
-deploy.bat
+cd frontend
+npm run build
 ```
 
-*Linux/macOS:*
-```bash
-chmod +x deploy.sh
-./deploy.sh
+2. **构建后端:**
+```cmd
+cd backend
+cargo build --release
 ```
 
-**方法二：手动部署**
-```bash
-# 构建并启动生产环境
-docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+3. **配置 Web 服务器 (IIS 或 Nginx for Windows):**
+   - 配置静态文件服务指向 `frontend/dist`
+   - 配置代理转发 API 请求到 Rust 后端
 
-# 查看服务状态
-docker-compose -f docker-compose.prod.yml ps
-```
+4. **配置 Windows 服务:**
+   使用 NSSM (Non-Sucking Service Manager) 将 Rust 后端注册为 Windows 服务
 
 ### 访问生产环境
 
@@ -306,37 +315,21 @@ docker-compose -f docker-compose.prod.yml ps
 ### 系统监控
 
 **实时监控:**
-```bash
+```cmd
 # Windows
 monitor.bat
-
-# Linux/macOS
-chmod +x monitor.sh
-./monitor.sh
 ```
 
 **查看日志:**
-```bash
-# 开发环境
-docker-compose logs -f
-
-# 生产环境
-docker-compose -f docker-compose.prod.yml logs -f
-
-# 查看特定服务日志
-docker-compose logs -f backend
-```
+使用 Windows 事件查看器或配置日志文件查看应用程序日志。
 
 **性能监控:**
-```bash
-# 查看容器资源使用情况
-docker stats
+```cmd
+# 查看资源使用情况
+tasklist /fi "imagename eq quantconsole*"
 
 # 查看磁盘使用情况
-docker system df
-
-# 清理无用镜像和容器
-docker system prune -a
+dir /s
 ```
 
 ## 🧪 测试
@@ -357,25 +350,23 @@ cargo test
 
 ## 📦 部署
 
-### Docker 部署
+### Windows 生产环境部署
 
-1. 构建镜像：
+1. **编译和构建:**
 
-```bash
-# 构建前端镜像
+```cmd
+# 构建前端
 cd frontend
-docker build -t quantconsole-frontend .
+npm run build
 
-# 构建后端镜像
+# 构建后端
 cd ../backend
-docker build -t quantconsole-backend .
+cargo build --release
 ```
 
-2. 使用 Docker Compose 部署：
+2. **部署到 Windows 服务器:**
 
-```bash
-docker-compose up -d
-```
+将 `frontend/dist` 目录部署到 Web 服务器，将 `target/release` 中的可执行文件部署到服务器。
 
 ### 生产环境配置
 

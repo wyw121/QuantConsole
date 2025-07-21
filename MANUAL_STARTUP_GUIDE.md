@@ -2,14 +2,29 @@
 
 本文档详细说明如何在不使用 Docker 的情况下手动启动 QuantConsole 项目的前端和后端服务。
 
-## 🎯 GitHub Copilot 性能优化说明
+## 🎯 GitHub Copilot 兼容性优化
 
-为了确保 GitHub Copilot 的最佳性能，我们已禁用了自动运行的 VS Code 任务（`runOn: "folderOpen"`）。这避免了 Copilot 与后台任务之间的资源竞争，提供更流畅的编码体验。
+**重要更新**：基于 [GitHub Issue #253265](https://github.com/microsoft/vscode/issues/253265) 的兼容性问题，我们已完全重构项目配置以确保与 GitHub Copilot 的最佳兼容性。
 
-**影响**：
-- 开发服务器不会在打开工作区时自动启动
-- 需要手动启动所需的开发任务
-- 更好的 Copilot 响应性能和建议质量
+### 问题概述
+GitHub Copilot Chat 与 VS Code Tasks 系统存在系统性兼容性问题：
+- `run_in_terminal` 和 `get_terminal_output` 功能无法正确捕获终端输出
+- 自动任务与 Copilot 后台进程产生资源竞争
+- 影响代码建议质量和响应速度
+
+### 解决方案
+✅ **已禁用自动任务**：移除所有 `"runOn": "folderOpen"` 配置
+✅ **优化终端集成**：确保 Copilot 能正确监听终端状态
+✅ **减少资源竞争**：关闭非必要的自动功能
+✅ **专用面板管理**：为每个任务分配独立终端
+
+### 开发体验改进
+- 🚀 **更快的 Copilot 响应**：减少资源竞争
+- 🎯 **更准确的代码建议**：优化的内存和 CPU 分配
+- 🛡️ **稳定的终端集成**：避免输出捕获问题
+- ⚡ **流畅的调试体验**：专用终端面板管理
+
+详细信息请查看 [`COPILOT_COMPATIBILITY_REPORT.md`](./COPILOT_COMPATIBILITY_REPORT.md)
 
 ## 📋 前置要求
 
