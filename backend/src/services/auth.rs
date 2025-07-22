@@ -3,7 +3,10 @@ use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use rand::Rng;
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
+    QueryOrder, Set,
+};
 use serde::{Deserialize, Serialize};
 use totp_rs::{Algorithm, TOTP};
 use uuid::Uuid;
@@ -90,12 +93,12 @@ impl AuthService {
     pub fn generate_device_fingerprint(user_agent: &str, ip_address: &str) -> String {
         use sha2::{Digest, Sha256};
 
-        let fingerprint_data = format!("{}:{}", user_agent, ip_address);
+        let fingerprint_data = format!("{user_agent}:{ip_address}");
         let mut hasher = Sha256::new();
         hasher.update(fingerprint_data.as_bytes());
         let result = hasher.finalize();
 
-        format!("{:x}", result)[..32].to_string()
+        format!("{result:x}")[..32].to_string()
     }
 
     /// 验证会话安全性
@@ -193,7 +196,7 @@ impl AuthService {
         self.log_security_event(
             user_id,
             "device_revoked".to_string(),
-            format!("设备访问权限已撤销: {}", device_id),
+            format!("设备访问权限已撤销: {device_id}"),
             "system".to_string(),
             "system".to_string(),
             "low".to_string(),
@@ -255,7 +258,7 @@ impl AuthService {
         user_id: Uuid,
         query: crate::handlers::device::SecurityEventQuery,
     ) -> Result<serde_json::Value> {
-        use sea_orm::{Condition, Order, PaginatorTrait};
+        use sea_orm::Condition;
 
         let page = query.page.unwrap_or(1);
         let limit = query.limit.unwrap_or(20);
