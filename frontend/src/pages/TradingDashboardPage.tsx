@@ -2,6 +2,8 @@ import { Button } from "@/components/Button";
 import { MarketStats, MarketStatus } from "@/components/MarketStats";
 import { OrderBook } from "@/components/OrderBook";
 import { PriceTicker, TopTicker } from "@/components/PriceTicker";
+import { QuickTradePanel } from "@/components/QuickTradePanel";
+import { RecentTrades } from "@/components/RecentTrades";
 import { TradingChart } from "@/components/TradingChart";
 import { useAuth, useMarketData, useTradingPairs } from "@/hooks";
 import {
@@ -12,7 +14,6 @@ import {
   Minimize2,
   RefreshCw,
   Search,
-  Settings,
   Star,
   Wifi,
   WifiOff,
@@ -356,6 +357,23 @@ export const TradingDashboardPage: React.FC = () => {
                 )}
               </div>
             </div>
+
+            {/* 快速交易模块 */}
+            <div className="mt-4">
+              <div className="bg-dark-800 rounded-lg p-4 min-w-0">
+                <QuickTradePanel
+                  selectedSymbol={selectedSymbol}
+                  currentPrice={selectedPriceData?.price || 0}
+                />
+              </div>
+            </div>
+
+            {/* 最近交易模块 */}
+            <div className="mt-4">
+              <div className="bg-dark-800 rounded-lg p-4">
+                <RecentTrades selectedSymbol={selectedSymbol} />
+              </div>
+            </div>
           </div>
 
           {/* 右侧边栏 */}
@@ -371,41 +389,6 @@ export const TradingDashboardPage: React.FC = () => {
                 <OrderBook data={orderBook} maxEntries={8} />
               </div>
             )}
-
-            {/* 快速交易面板 */}
-            <div className="bg-dark-800 rounded-lg p-4 min-w-0">
-              <h3 className="text-lg font-medium text-white mb-4">快速交易</h3>
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="primary" size="sm" className="w-full">
-                    买入
-                  </Button>
-                  <Button variant="secondary" size="sm" className="w-full">
-                    卖出
-                  </Button>
-                </div>
-                <div className="text-sm text-gray-400">
-                  <div className="flex justify-between">
-                    <span>可用余额:</span>
-                    <span>$0.00</span>
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span>持仓数量:</span>
-                    <span>0.00000</span>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" className="w-full">
-                  <Settings className="w-4 h-4 mr-2" />
-                  交易设置
-                </Button>
-              </div>
-            </div>
-
-            {/* 最近交易 */}
-            <div className="bg-dark-800 rounded-lg p-4">
-              <h3 className="text-lg font-medium text-white mb-4">最近交易</h3>
-              <div className="text-center text-gray-400 py-8">暂无交易记录</div>
-            </div>
           </div>
         </div>
       </main>
