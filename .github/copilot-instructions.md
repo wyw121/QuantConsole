@@ -12,6 +12,7 @@
 2. **严禁使用 `create_and_run_task` 工具**：不得创建或运行任何 VS Code 任务
 3. **严禁引用 `.vscode/tasks.json`**：该文件已被禁用，不得读取或使用其中的配置
 4. **强制使用 `run_in_terminal` 工具**：所有开发任务必须通过终端手动执行
+5. **🚫 严禁使用 `cargo clean` 命令**：GitHub Copilot 不得执行 `cargo clean` 清理命令，以避免不必要的重新编译和构建时间延长
 
 ### 替代方案
 
@@ -26,7 +27,7 @@
 
 ### 违规检测
 
-如果 GitHub Copilot 尝试使用任何 VS Code Tasks 功能，将被视为违反用户指令。
+如果 GitHub Copilot 尝试使用任何 VS Code Tasks 功能或执行 `cargo clean` 命令，将被视为违反用户指令。
 
 ---
 

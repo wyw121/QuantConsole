@@ -71,6 +71,13 @@ const createApiClient = (): AxiosInstance => {
         }
       }
 
+      // 处理其他HTTP错误，提取后端返回的具体错误信息
+      if (response?.data?.message) {
+        const apiError = new Error(response.data.message);
+        apiError.name = "ApiError";
+        return Promise.reject(apiError);
+      }
+
       return Promise.reject(error);
     }
   );
@@ -125,6 +132,9 @@ export const authApi = {
 
   // 注册
   async register(data: RegisterRequest): Promise<AuthResponse> {
+    console.log("🔍 [Frontend] 开始注册流程");
+    console.log("📝 [Frontend] 原始表单数据:", data);
+
     // 过滤掉后端不需要的字段
     const registerData = {
       email: data.email,
@@ -133,27 +143,50 @@ export const authApi = {
       first_name: data.firstName,
       last_name: data.lastName,
     };
-    const response = await apiClient.post<ApiResponse<any>>(
-      "/auth/register",
-      registerData
-    );
-    const result = handleApiResponse(response);
 
-    // 转换响应字段名以匹配前端
-    return {
-      user: {
-        ...result.user,
-        firstName: result.user.first_name,
-        lastName: result.user.last_name,
-        isEmailVerified: result.user.is_email_verified,
-        isTwoFactorEnabled: result.user.is_two_factor_enabled,
-        createdAt: result.user.created_at,
-        lastLoginAt: result.user.last_login_at,
-      },
-      accessToken: result.access_token,
-      refreshToken: result.refresh_token,
-      expiresIn: result.expires_in,
-    };
+    console.log("📤 [Frontend] 发送到后端的数据:", registerData);
+    console.log(
+      "🌐 [Frontend] API 请求 URL:",
+      `${
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api"
+      }/auth/register`
+    );
+
+    try {
+      const response = await apiClient.post<ApiResponse<any>>(
+        "/auth/register",
+        registerData
+      );
+
+      console.log("📥 [Frontend] 收到后端响应:", response);
+      console.log("📄 [Frontend] 响应状态:", response.status);
+      console.log("🎯 [Frontend] 响应数据:", response.data);
+
+      const result = handleApiResponse(response);
+      console.log("✅ [Frontend] 处理后的响应数据:", result);
+
+      // 转换响应字段名以匹配前端
+      return {
+        user: {
+          ...result.user,
+          firstName: result.user.first_name,
+          lastName: result.user.last_name,
+          isEmailVerified: result.user.is_email_verified,
+          isTwoFactorEnabled: result.user.is_two_factor_enabled,
+          createdAt: result.user.created_at,
+          lastLoginAt: result.user.last_login_at,
+        },
+        accessToken: result.access_token,
+        refreshToken: result.refresh_token,
+        expiresIn: result.expires_in,
+      };
+    } catch (error) {
+      console.error("❌ [Frontend] 注册请求失败:", error);
+      if (error instanceof Error) {
+        console.error("💥 [Frontend] 错误信息:", error.message);
+      }
+      throw error;
+    }
   },
 
   // 登出

@@ -10,6 +10,9 @@ pub async fn register(
     auth_service: web::Data<Arc<AuthService>>,
     request: web::Json<RegisterRequest>,
 ) -> Result<HttpResponse> {
+    log::info!("🔍 [Backend Handler] 接收到注册请求");
+    log::info!("📝 [Backend Handler] 请求数据: {:?}", request);
+
     // 获取客户端信息
     let ip_address = req
         .connection_info()
@@ -24,13 +27,22 @@ pub async fn register(
         .unwrap_or("unknown")
         .to_string();
 
+    log::info!(
+        "🌐 [Backend Handler] 客户端信息 - IP: {}, User-Agent: {}",
+        ip_address,
+        user_agent
+    );
+
     match auth_service
         .register(request.into_inner(), ip_address, user_agent)
         .await
     {
-        Ok(response) => Ok(HttpResponse::Ok().json(ApiResponse::success(response))),
+        Ok(response) => {
+            log::info!("✅ [Backend Handler] 注册成功: {:?}", response);
+            Ok(HttpResponse::Ok().json(ApiResponse::success(response)))
+        }
         Err(e) => {
-            log::error!("注册失败: {}", e);
+            log::error!("❌ [Backend Handler] 注册失败: {}", e);
             Ok(HttpResponse::BadRequest().json(ApiResponse::<()>::error(
                 ErrorCode::ValidationError,
                 &e.to_string(),

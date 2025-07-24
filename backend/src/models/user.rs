@@ -1,7 +1,6 @@
 use sea_orm::entity::prelude::*;
 use sea_orm::{ActiveModelTrait, Set};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "users")]
@@ -71,14 +70,15 @@ impl Related<super::security_event::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {
     fn new() -> Self {
+        let now = chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap());
         Self {
-            id: Set(Uuid::new_v4().to_string()),
-            created_at: Set(
-                chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())
-            ),
-            updated_at: Set(
-                chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())
-            ),
+            // 不要在这里设置 id，让外部显式设置
+            role: Set("user".to_string()),
+            is_active: Set(true),
+            is_email_verified: Set(false),
+            is_two_factor_enabled: Set(false),
+            created_at: Set(now),
+            updated_at: Set(now),
             ..ActiveModelTrait::default()
         }
     }

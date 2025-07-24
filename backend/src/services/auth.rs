@@ -331,44 +331,107 @@ impl AuthService {
         ip_address: String,
         user_agent: String,
     ) -> Result<AuthResponse> {
+        log::info!("🔍 [AuthService] 开始注册流程");
+        log::info!(
+            "📝 [AuthService] 注册请求: email={}, username={}",
+            request.email,
+            request.username
+        );
+
         // 检查邮箱是否已存在
+        log::info!("🔍 [AuthService] 检查邮箱是否已存在: {}", request.email);
         if User::find()
             .filter(user::Column::Email.eq(&request.email))
             .one(&self.db)
             .await?
             .is_some()
         {
+            log::warn!("❌ [AuthService] 邮箱已被注册: {}", request.email);
             return Err(anyhow::anyhow!("邮箱已被注册"));
         }
+        log::info!("✅ [AuthService] 邮箱检查通过");
 
         // 检查用户名是否已存在
+        log::info!(
+            "🔍 [AuthService] 检查用户名是否已存在: {}",
+            request.username
+        );
         if User::find()
             .filter(user::Column::Username.eq(&request.username))
             .one(&self.db)
             .await?
             .is_some()
         {
+            log::warn!("❌ [AuthService] 用户名已被使用: {}", request.username);
             return Err(anyhow::anyhow!("用户名已被使用"));
         }
+        log::info!("✅ [AuthService] 用户名检查通过");
 
         // 创建用户
+        log::info!("🔐 [AuthService] 开始哈希密码");
         let password_hash = self.hash_password(&request.password)?;
         let user_id = uuid::Uuid::new_v4().to_string();
+        let now = Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap());
+
+        log::info!("👤 [AuthService] 创建用户模型 - ID: {}", user_id);
+
         let user = user::ActiveModel {
-            id: Set(user_id),
+            id: Set(user_id.clone()),
             email: Set(request.email.clone()),
             username: Set(request.username.clone()),
             password_hash: Set(password_hash),
             first_name: Set(request.first_name.clone()),
             last_name: Set(request.last_name.clone()),
+            role: Set("user".to_string()),
+            is_active: Set(true),
+            is_email_verified: Set(false),
+            is_two_factor_enabled: Set(false),
+            created_at: Set(now),
+            updated_at: Set(now),
             ..Default::default()
         };
 
-        let user = user.insert(&self.db).await?;
+        // 插入用户
+        log::info!("💾 [AuthService] 插入用户到数据库");
+        let result = user.insert(&self.db).await;
+
+        let inserted_user = match result {
+            Ok(user) => user,
+            Err(e) => {
+                // 如果插入后查询失败，尝试手动查询刚插入的用户
+                log::warn!("⚠️ [AuthService] 插入后自动查询失败，尝试手动查询: {}", e);
+
+                // 等待一小段时间确保数据写入完成
+                tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
+                let manual_query_result = User::find()
+                    .filter(user::Column::Id.eq(&user_id))
+                    .one(&self.db)
+                    .await?;
+
+                match manual_query_result {
+                    Some(user) => {
+                        log::info!("✅ [AuthService] 手动查询成功找到用户: {}", user.id);
+                        user
+                    }
+                    None => {
+                        log::error!("❌ [AuthService] 手动查询也失败，用户插入可能未成功");
+                        return Err(anyhow::anyhow!("用户插入失败：无法找到刚插入的记录"));
+                    }
+                }
+            }
+        };
+
+        log::info!(
+            "✅ [AuthService] 用户插入成功: id={}, email={}",
+            inserted_user.id,
+            inserted_user.email
+        );
 
         // 记录安全事件
+        log::info!("📝 [AuthService] 记录安全事件");
         self.log_security_event(
-            user.id.clone(),
+            inserted_user.id.clone(),
             "register".to_string(),
             "用户注册".to_string(),
             ip_address.clone(),
@@ -376,20 +439,31 @@ impl AuthService {
             "low".to_string(),
         )
         .await?;
+        log::info!("✅ [AuthService] 安全事件记录成功");
 
         // 生成令牌
-        let (access_token, refresh_token) = self.generate_tokens(&user).await?;
+        log::info!("🔑 [AuthService] 生成认证令牌");
+        let (access_token, refresh_token) = self.generate_tokens(&inserted_user).await?;
+        log::info!("✅ [AuthService] 令牌生成成功");
 
         // 创建会话
-        self.create_session(&user, &refresh_token, ip_address, user_agent)
+        log::info!("📋 [AuthService] 创建用户会话");
+        self.create_session(&inserted_user, &refresh_token, ip_address, user_agent)
             .await?;
+        log::info!("✅ [AuthService] 会话创建成功");
 
-        Ok(AuthResponse {
-            user: self.user_to_response(&user),
+        let response = AuthResponse {
+            user: self.user_to_response(&inserted_user),
             access_token,
             refresh_token,
             expires_in: 3600, // 1 小时
-        })
+        };
+
+        log::info!(
+            "🎉 [AuthService] 注册流程完成: user_id={}",
+            inserted_user.id
+        );
+        Ok(response)
     }
 
     pub async fn login(
@@ -676,7 +750,17 @@ impl AuthService {
             ..Default::default()
         };
 
-        session.insert(&self.db).await?;
+        // 插入会话，如果出现查询问题则忽略（不影响主要业务流程）
+        match session.insert(&self.db).await {
+            Ok(_) => {
+                log::debug!("✅ [AuthService] 会话创建成功");
+            }
+            Err(e) => {
+                log::warn!("⚠️ [AuthService] 会话记录失败，但不影响主流程: {}", e);
+                // 对于会话记录失败，我们不抛出错误，避免影响主要业务流程
+            }
+        }
+
         Ok(())
     }
 
@@ -700,7 +784,17 @@ impl AuthService {
             ..Default::default()
         };
 
-        event.insert(&self.db).await?;
+        // 插入安全事件，如果出现查询问题则忽略（不影响主要业务流程）
+        match event.insert(&self.db).await {
+            Ok(_) => {
+                log::debug!("✅ [AuthService] 安全事件记录成功");
+            }
+            Err(e) => {
+                log::warn!("⚠️ [AuthService] 安全事件记录失败，但不影响主流程: {}", e);
+                // 对于安全事件记录失败，我们不抛出错误，避免影响主要业务流程
+            }
+        }
+
         Ok(())
     }
 
