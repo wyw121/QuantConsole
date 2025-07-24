@@ -93,14 +93,19 @@ pub async fn logout(
         Err(response) => return Ok(response),
     };
 
-    match auth_service.logout(*user_id, refresh_token).await {
+    match auth_service
+        .logout(user_id.to_string(), refresh_token)
+        .await
+    {
         Ok(_) => Ok(HttpResponse::Ok().json(ApiResponse::success(json!({})))),
         Err(e) => {
             log::error!("登出失败: {}", e);
-            Ok(HttpResponse::InternalServerError().json(ApiResponse::<()>::error(
-                ErrorCode::InternalError,
-                "登出失败",
-            )))
+            Ok(
+                HttpResponse::InternalServerError().json(ApiResponse::<()>::error(
+                    ErrorCode::InternalError,
+                    "登出失败",
+                )),
+            )
         }
     }
 }
@@ -146,14 +151,16 @@ pub async fn setup_two_factor(
     auth_service: web::Data<Arc<AuthService>>,
     user_id: web::ReqData<uuid::Uuid>,
 ) -> Result<HttpResponse> {
-    match auth_service.setup_two_factor(*user_id).await {
+    match auth_service.setup_two_factor(user_id.to_string()).await {
         Ok(response) => Ok(HttpResponse::Ok().json(ApiResponse::success(response))),
         Err(e) => {
             log::error!("设置双因素认证失败: {}", e);
-            Ok(HttpResponse::InternalServerError().json(ApiResponse::<()>::error(
-                ErrorCode::InternalError,
-                "设置双因素认证失败",
-            )))
+            Ok(
+                HttpResponse::InternalServerError().json(ApiResponse::<()>::error(
+                    ErrorCode::InternalError,
+                    "设置双因素认证失败",
+                )),
+            )
         }
     }
 }
@@ -163,15 +170,12 @@ pub async fn confirm_two_factor(
     user_id: web::ReqData<uuid::Uuid>,
     request: web::Json<serde_json::Value>,
 ) -> Result<HttpResponse> {
-    let code = request
-        .get("code")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| {
-            HttpResponse::BadRequest().json(ApiResponse::<()>::error(
-                ErrorCode::ValidationError,
-                "缺少验证码",
-            ))
-        });
+    let code = request.get("code").and_then(|v| v.as_str()).ok_or_else(|| {
+        HttpResponse::BadRequest().json(ApiResponse::<()>::error(
+            ErrorCode::ValidationError,
+            "缺少验证码",
+        ))
+    });
 
     let code = match code {
         Ok(_) => code.unwrap().to_string(),
@@ -179,7 +183,7 @@ pub async fn confirm_two_factor(
     };
 
     match auth_service
-        .verify_and_enable_two_factor(*user_id, code)
+        .verify_and_enable_two_factor(user_id.to_string(), code.clone())
         .await
     {
         Ok(backup_codes) => Ok(HttpResponse::Ok().json(ApiResponse::success(json!({

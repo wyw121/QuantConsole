@@ -11,7 +11,7 @@ pub async fn get_active_devices(
     auth_service: web::Data<Arc<AuthService>>,
     user_id: web::ReqData<Uuid>,
 ) -> Result<HttpResponse> {
-    match auth_service.get_active_devices(*user_id).await {
+    match auth_service.get_active_devices(user_id.to_string()).await {
         Ok(devices) => Ok(HttpResponse::Ok().json(ApiResponse::success(devices))),
         Err(e) => {
             log::error!("获取设备列表失败: {}", e);
@@ -34,7 +34,7 @@ pub async fn revoke_device_access(
     let device_id = path.into_inner();
 
     match auth_service
-        .revoke_device_access(*user_id, &device_id)
+        .revoke_device_access(user_id.to_string(), &device_id)
         .await
     {
         Ok(_) => Ok(HttpResponse::Ok().json(ApiResponse::success(json!({})))),
@@ -55,7 +55,7 @@ pub async fn logout_all_devices(
     auth_service: web::Data<Arc<AuthService>>,
     user_id: web::ReqData<Uuid>,
 ) -> Result<HttpResponse> {
-    match auth_service.logout_all_devices(*user_id).await {
+    match auth_service.logout_all_devices(user_id.to_string()).await {
         Ok(_) => Ok(HttpResponse::Ok().json(ApiResponse::success(json!({})))),
         Err(e) => {
             log::error!("登出所有设备失败: {}", e);
@@ -76,7 +76,7 @@ pub async fn get_security_events(
     query: web::Query<SecurityEventQuery>,
 ) -> Result<HttpResponse> {
     match auth_service
-        .get_security_events(*user_id, query.into_inner())
+        .get_security_events(user_id.to_string(), query.into_inner())
         .await
     {
         Ok(events) => Ok(HttpResponse::Ok().json(ApiResponse::success(events))),

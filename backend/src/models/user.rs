@@ -6,9 +6,9 @@ use uuid::Uuid;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "users")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, column_type = "Char(Some(36))")]
     #[serde(skip_deserializing)]
-    pub id: Uuid,
+    pub id: String,
 
     #[sea_orm(unique)]
     pub email: String,
@@ -72,7 +72,7 @@ impl Related<super::security_event::Entity> for Entity {
 impl ActiveModelBehavior for ActiveModel {
     fn new() -> Self {
         Self {
-            id: Set(Uuid::new_v4()),
+            id: Set(Uuid::new_v4().to_string()),
             created_at: Set(
                 chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())
             ),

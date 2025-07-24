@@ -6,11 +6,12 @@ use uuid::Uuid;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "user_sessions")]
 pub struct Model {
-    #[sea_orm(primary_key)]
+    #[sea_orm(primary_key, column_type = "Char(Some(36))")]
     #[serde(skip_deserializing)]
-    pub id: Uuid,
+    pub id: String,
 
-    pub user_id: Uuid,
+    #[sea_orm(column_type = "Char(Some(36))")]
+    pub user_id: String,
 
     #[serde(skip_serializing)]
     pub refresh_token: String,
@@ -49,7 +50,7 @@ impl Related<super::user::Entity> for Entity {
 impl ActiveModelBehavior for ActiveModel {
     fn new() -> Self {
         Self {
-            id: Set(Uuid::new_v4()),
+            id: Set(Uuid::new_v4().to_string()),
             created_at: Set(chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())),
             updated_at: Set(chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())),
             last_accessed_at: Set(chrono::Utc::now().with_timezone(&chrono::FixedOffset::east_opt(0).unwrap())),

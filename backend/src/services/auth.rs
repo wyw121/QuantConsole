@@ -59,7 +59,7 @@ pub struct AuthResponse {
 
 #[derive(Debug, Serialize)]
 pub struct UserResponse {
-    pub id: Uuid,
+    pub id: String,
     pub email: String,
     pub username: String,
     pub first_name: Option<String>,
@@ -104,14 +104,14 @@ impl AuthService {
     /// 验证会话安全性
     pub async fn verify_session_security(
         &self,
-        user_id: Uuid,
+        user_id: String,
         session_id: &str,
         ip_address: &str,
         user_agent: &str,
     ) -> Result<bool> {
         // 查找会话
         let session = UserSession::find()
-            .filter(user_session::Column::UserId.eq(user_id))
+            .filter(user_session::Column::UserId.eq(&user_id))
             .filter(user_session::Column::Id.eq(session_id))
             .filter(user_session::Column::IsActive.eq(true))
             .one(&self.db)
@@ -156,7 +156,7 @@ impl AuthService {
     }
 
     /// 获取用户的活跃设备列表
-    pub async fn get_active_devices(&self, user_id: Uuid) -> Result<Vec<serde_json::Value>> {
+    pub async fn get_active_devices(&self, user_id: String) -> Result<Vec<serde_json::Value>> {
         let sessions = UserSession::find()
             .filter(user_session::Column::UserId.eq(user_id))
             .filter(user_session::Column::IsActive.eq(true))
@@ -184,10 +184,10 @@ impl AuthService {
     }
 
     /// 撤销设备访问权限
-    pub async fn revoke_device_access(&self, user_id: Uuid, device_id: &str) -> Result<()> {
+    pub async fn revoke_device_access(&self, user_id: String, device_id: &str) -> Result<()> {
         // 删除指定设备的会话
         UserSession::delete_many()
-            .filter(user_session::Column::UserId.eq(user_id))
+            .filter(user_session::Column::UserId.eq(&user_id))
             .filter(user_session::Column::Id.eq(device_id))
             .exec(&self.db)
             .await?;
@@ -207,9 +207,9 @@ impl AuthService {
     }
 
     /// 登出所有设备
-    pub async fn logout_all_devices(&self, user_id: Uuid) -> Result<()> {
+    pub async fn logout_all_devices(&self, user_id: String) -> Result<()> {
         UserSession::delete_many()
-            .filter(user_session::Column::UserId.eq(user_id))
+            .filter(user_session::Column::UserId.eq(&user_id))
             .exec(&self.db)
             .await?;
 
@@ -255,7 +255,7 @@ impl AuthService {
     /// 获取用户安全事件
     pub async fn get_security_events(
         &self,
-        user_id: Uuid,
+        user_id: String,
         query: crate::handlers::device::SecurityEventQuery,
     ) -> Result<serde_json::Value> {
         use sea_orm::Condition;
@@ -353,7 +353,9 @@ impl AuthService {
 
         // 创建用户
         let password_hash = self.hash_password(&request.password)?;
+        let user_id = uuid::Uuid::new_v4().to_string();
         let user = user::ActiveModel {
+            id: Set(user_id),
             email: Set(request.email.clone()),
             username: Set(request.username.clone()),
             password_hash: Set(password_hash),
@@ -366,7 +368,7 @@ impl AuthService {
 
         // 记录安全事件
         self.log_security_event(
-            user.id,
+            user.id.clone(),
             "register".to_string(),
             "用户注册".to_string(),
             ip_address.clone(),
@@ -449,7 +451,7 @@ impl AuthService {
 
         // 记录安全事件
         self.log_security_event(
-            user.id,
+            user.id.clone(),
             "login".to_string(),
             "用户登录".to_string(),
             ip_address.clone(),
@@ -473,7 +475,7 @@ impl AuthService {
         })
     }
 
-    pub async fn logout(&self, user_id: Uuid, refresh_token: String) -> Result<()> {
+    pub async fn logout(&self, user_id: String, refresh_token: String) -> Result<()> {
         // 删除会话
         UserSession::delete_many()
             .filter(user_session::Column::UserId.eq(user_id))
@@ -500,7 +502,8 @@ impl AuthService {
         }
 
         // 查找用户
-        let user = User::find_by_id(session.user_id)
+        let user_id = session.user_id.clone();
+        let user = User::find_by_id(&user_id)
             .one(&self.db)
             .await?
             .ok_or_else(|| anyhow::anyhow!("用户不存在"))?;
@@ -518,7 +521,7 @@ impl AuthService {
         Ok((access_token, new_refresh_token))
     }
 
-    pub async fn setup_two_factor(&self, user_id: Uuid) -> Result<TwoFactorSetupResponse> {
+    pub async fn setup_two_factor(&self, user_id: String) -> Result<TwoFactorSetupResponse> {
         let user = User::find_by_id(user_id)
             .one(&self.db)
             .await?
@@ -558,7 +561,7 @@ impl AuthService {
 
     pub async fn verify_and_enable_two_factor(
         &self,
-        user_id: Uuid,
+        user_id: String,
         code: String,
     ) -> Result<Vec<String>> {
         let user = User::find_by_id(user_id)
@@ -661,7 +664,8 @@ impl AuthService {
         user_agent: String,
     ) -> Result<()> {
         let session = user_session::ActiveModel {
-            user_id: Set(user.id),
+            id: Set(uuid::Uuid::new_v4().to_string()),
+            user_id: Set(user.id.clone()),
             refresh_token: Set(refresh_token.to_string()),
             ip_address: Set(ip_address),
             user_agent: Set(user_agent),
@@ -678,7 +682,7 @@ impl AuthService {
 
     async fn log_security_event(
         &self,
-        user_id: Uuid,
+        user_id: String,
         event_type: String,
         description: String,
         ip_address: String,
@@ -686,6 +690,7 @@ impl AuthService {
         severity: String,
     ) -> Result<()> {
         let event = security_event::ActiveModel {
+            id: Set(uuid::Uuid::new_v4().to_string()),
             user_id: Set(user_id),
             event_type: Set(event_type),
             description: Set(description),
@@ -701,7 +706,7 @@ impl AuthService {
 
     fn user_to_response(&self, user: &user::Model) -> UserResponse {
         UserResponse {
-            id: user.id,
+            id: user.id.clone(),
             email: user.email.clone(),
             username: user.username.clone(),
             first_name: user.first_name.clone(),
