@@ -1,0 +1,290 @@
+/* 交易控制台页面样式优化 */
+
+/* 市场概览组件样式 */
+.market-overview-container {
+  @apply bg-dark-800 rounded-lg p-4 sm:p-6;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.market-overview-header {
+  @apply flex items-center mb-4 sm:mb-6;
+}
+
+.market-overview-title {
+  @apply text-lg sm:text-xl font-semibold text-white;
+}
+
+.market-overview-grid {
+  @apply grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4;
+  min-width: 0;
+}
+
+.market-stat-card {
+  @apply bg-dark-700 rounded-lg p-3 sm:p-4 hover:bg-dark-600 transition-colors;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.market-stat-header {
+  @apply flex items-center justify-between mb-2 sm:mb-3;
+  min-width: 0;
+}
+
+.market-stat-icon {
+  @apply p-1.5 sm:p-2 rounded-lg flex-shrink-0;
+}
+
+.market-stat-value-container {
+  @apply text-right min-w-0 flex-1 ml-2;
+}
+
+.market-stat-value {
+  @apply text-lg sm:text-xl lg:text-2xl font-bold;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.market-stat-footer {
+  @apply flex items-center justify-between;
+  min-width: 0;
+}
+
+.market-stat-label {
+  @apply text-gray-400 text-xs sm:text-sm font-medium;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  padding-right: 0.5rem;
+}
+
+.market-stat-subvalue {
+  @apply text-gray-500 text-xs flex-shrink-0;
+}
+
+/* 恐惧贪婪指数样式 */
+.fear-greed-container {
+  @apply mt-4 sm:mt-6 bg-dark-700 rounded-lg p-3 sm:p-4;
+}
+
+.fear-greed-header {
+  @apply flex items-center justify-between mb-2 sm:mb-3;
+  min-width: 0;
+}
+
+.fear-greed-title {
+  @apply text-white font-medium text-sm sm:text-base;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  padding-right: 0.5rem;
+}
+
+.fear-greed-value {
+  @apply font-bold text-xs sm:text-sm flex-shrink-0;
+}
+
+/* 进度条样式 */
+.progress-bar-container {
+  @apply relative;
+}
+
+.progress-bar-track {
+  @apply w-full bg-dark-600 rounded-full h-2;
+}
+
+.progress-bar-fill {
+  @apply h-2 rounded-full transition-all duration-300;
+}
+
+.progress-bar-labels {
+  @apply flex justify-between mt-1 text-xs text-gray-500;
+}
+
+/* 响应式隐藏/显示标签 */
+.progress-label-mobile {
+  @apply sm:hidden;
+}
+
+.progress-label-tablet {
+  @apply hidden sm:inline lg:hidden;
+}
+
+.progress-label-desktop {
+  @apply hidden lg:inline;
+}
+
+/* 交易面板网格布局优化 */
+.trading-grid {
+  @apply grid grid-cols-12 gap-4 lg:gap-6 h-full;
+  min-height: 0;
+}
+
+.trading-sidebar-left {
+  @apply col-span-12 md:col-span-4 lg:col-span-3 space-y-4;
+  min-width: 0;
+}
+
+.trading-main-content {
+  @apply col-span-12 md:col-span-8 lg:col-span-6 space-y-4;
+  min-width: 0;
+}
+
+.trading-sidebar-right {
+  @apply col-span-12 lg:col-span-3 space-y-4;
+  min-width: 0;
+}
+
+/* 全屏模式下的布局 */
+.trading-fullscreen .trading-sidebar-left {
+  @apply col-span-2;
+}
+
+.trading-fullscreen .trading-main-content {
+  @apply col-span-7;
+}
+
+.trading-fullscreen .trading-sidebar-right {
+  @apply col-span-3;
+}
+
+/* 安全容器 - 防止内容溢出 */
+.safe-container {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* 截断文本工具类 */
+.text-truncate-safe {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* 弹性容器优化 */
+.flex-safe {
+  display: flex;
+  min-width: 0;
+}
+
+.flex-safe>* {
+  min-width: 0;
+}
+
+/* 网格容器优化 */
+.grid-safe {
+  display: grid;
+  min-width: 0;
+}
+
+.grid-safe>* {
+  min-width: 0;
+}
+
+/* 响应式显示优化 */
+@media (max-width: 768px) {
+  .market-overview-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .market-stat-value {
+    font-size: 1rem;
+    line-height: 1.25rem;
+  }
+
+  .market-stat-label {
+    font-size: 0.75rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .market-overview-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+/* 大屏幕三栏布局下的竖向优化 */
+@media (min-width: 1025px) {
+  .market-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  /* 大屏幕下的竖向布局优化 */
+  .market-stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem 0.75rem;
+    min-height: 140px;
+    justify-content: space-between;
+  }
+
+  .market-stat-header {
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .market-stat-icon {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .market-stat-value-container {
+    text-align: center;
+    margin-left: 0;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .market-stat-value {
+    font-size: 1.25rem;
+    line-height: 1.2;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+
+  .market-stat-footer {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0.25rem;
+    margin-top: auto;
+  }
+
+  .market-stat-label {
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding-right: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    margin-bottom: 0.25rem;
+  }
+
+  .market-stat-subvalue {
+    text-align: center;
+    font-size: 0.75rem;
+  }
+}
+
+/* 高DPI屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+  .market-stat-card {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+}

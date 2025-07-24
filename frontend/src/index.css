@@ -1,3 +1,6 @@
+/* 导入交易控制台样式 */
+@import './styles/trading-dashboard.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -68,6 +71,36 @@
 
   .gradient-text {
     @apply bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent;
+  }
+
+  /* 防止内容溢出的工具类 */
+  .no-overflow {
+    @apply min-w-0 overflow-hidden;
+  }
+
+  .grid-safe {
+    @apply grid min-w-0;
+  }
+
+  .flex-safe {
+    @apply flex min-w-0;
+  }
+
+  /* 市场概览卡片优化 */
+  .market-card {
+    @apply bg-dark-700 rounded-lg p-3 sm:p-4 hover:bg-dark-600 transition-colors min-w-0 overflow-hidden;
+  }
+
+  .market-card-content {
+    @apply flex items-center justify-between mb-2 sm:mb-3 min-w-0;
+  }
+
+  .market-card-value {
+    @apply text-lg sm:text-xl lg:text-2xl font-bold truncate;
+  }
+
+  .market-card-label {
+    @apply text-gray-400 text-xs sm:text-sm font-medium truncate pr-2;
   }
 
   .glass-effect {

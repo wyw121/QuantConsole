@@ -68,7 +68,7 @@ export const TradingDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-950">
+    <div className="min-h-screen bg-dark-950 overflow-x-hidden">
       {/* 顶部价格条 */}
       <TopTicker data={priceData.slice(0, 8)} />
 
@@ -138,16 +138,14 @@ export const TradingDashboardPage: React.FC = () => {
         className={`${
           isFullscreen
             ? "fixed inset-0 top-0 z-50 bg-dark-950"
-            : "max-w-7xl mx-auto"
-        } px-4 sm:px-6 lg:px-8 py-6`}
+            : "max-w-full xl:max-w-7xl mx-auto"
+        } px-2 sm:px-4 lg:px-6 xl:px-8 py-4 lg:py-6`}
       >
-        <div className="grid grid-cols-12 gap-6 h-full">
+        <div
+          className={`trading-grid ${isFullscreen ? "trading-fullscreen" : ""}`}
+        >
           {/* 左侧边栏 - 价格列表 */}
-          <div
-            className={`${
-              isFullscreen ? "col-span-2" : "col-span-3"
-            } space-y-4`}
-          >
+          <div className={`trading-sidebar-left ${isFullscreen ? "" : ""}`}>
             {/* 搜索栏 */}
             <div className="bg-dark-800 rounded-lg p-4">
               <div className="relative">
@@ -219,11 +217,7 @@ export const TradingDashboardPage: React.FC = () => {
           </div>
 
           {/* 中间主要区域 - 图表 */}
-          <div
-            className={`${
-              isFullscreen ? "col-span-7" : "col-span-6"
-            } space-y-4`}
-          >
+          <div className={`trading-main-content ${isFullscreen ? "" : ""}`}>
             {/* 选中交易对信息 */}
             {selectedPriceData && (
               <div className="bg-dark-800 rounded-lg p-4">
@@ -365,15 +359,21 @@ export const TradingDashboardPage: React.FC = () => {
           </div>
 
           {/* 右侧边栏 */}
-          <div className="col-span-3 space-y-4">
+          <div className={`trading-sidebar-right ${isFullscreen ? "" : ""}`}>
             {/* 市场统计 */}
-            <MarketStats />
+            <div className="min-w-0">
+              <MarketStats />
+            </div>
 
             {/* 订单簿 */}
-            {!isFullscreen && <OrderBook data={orderBook} maxEntries={8} />}
+            {!isFullscreen && (
+              <div className="min-w-0">
+                <OrderBook data={orderBook} maxEntries={8} />
+              </div>
+            )}
 
             {/* 快速交易面板 */}
-            <div className="bg-dark-800 rounded-lg p-4">
+            <div className="bg-dark-800 rounded-lg p-4 min-w-0">
               <h3 className="text-lg font-medium text-white mb-4">快速交易</h3>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">

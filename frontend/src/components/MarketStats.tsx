@@ -104,37 +104,32 @@ export const MarketStats: React.FC<MarketStatsProps> = ({
   ];
 
   return (
-    <div className={`bg-dark-800 rounded-lg p-6 ${className}`}>
-      <div className="flex items-center mb-6">
-        <BarChart3 className="w-6 h-6 text-blue-400 mr-2" />
-        <h3 className="text-xl font-semibold text-white">市场概览</h3>
+    <div className={`market-overview-container ${className}`}>
+      <div className="market-overview-header">
+        <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 mr-2" />
+        <h3 className="market-overview-title">市场概览</h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="market-overview-grid">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
 
           return (
-            <div
-              key={index}
-              className="bg-dark-700 rounded-lg p-4 hover:bg-dark-600 transition-colors"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                  <Icon className={`w-5 h-5 ${stat.color}`} />
+            <div key={index} className="market-stat-card">
+              <div className="market-stat-header">
+                <div className={`market-stat-icon ${stat.bgColor}`}>
+                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color}`} />
                 </div>
-                <div className="text-right">
-                  <div className={`text-2xl font-bold ${stat.color}`}>
+                <div className="market-stat-value-container">
+                  <div className={`market-stat-value ${stat.color}`}>
                     {stat.value}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400 text-sm font-medium">
-                  {stat.label}
-                </span>
-                <span className="text-gray-500 text-xs">{stat.subvalue}</span>
+              <div className="market-stat-footer">
+                <span className="market-stat-label">{stat.label}</span>
+                <span className="market-stat-subvalue">{stat.subvalue}</span>
               </div>
             </div>
           );
@@ -142,19 +137,21 @@ export const MarketStats: React.FC<MarketStatsProps> = ({
       </div>
 
       {/* 恐惧贪婪指数详细显示 */}
-      <div className="mt-6 bg-dark-700 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-white font-medium">恐惧贪婪指数</span>
-          <span className={`font-bold ${getFearGreedColor(fearGreedIndex)}`}>
+      <div className="fear-greed-container">
+        <div className="fear-greed-header">
+          <span className="fear-greed-title">恐惧贪婪指数</span>
+          <span
+            className={`fear-greed-value ${getFearGreedColor(fearGreedIndex)}`}
+          >
             {fearGreedIndex} - {getFearGreedLabel(fearGreedIndex)}
           </span>
         </div>
 
         {/* 进度条 */}
-        <div className="relative">
-          <div className="w-full bg-dark-600 rounded-full h-2">
+        <div className="progress-bar-container">
+          <div className="progress-bar-track">
             <div
-              className={`h-2 rounded-full transition-all duration-300 ${
+              className={`progress-bar-fill ${
                 fearGreedIndex >= 75
                   ? "bg-green-400"
                   : fearGreedIndex >= 55
@@ -170,18 +167,22 @@ export const MarketStats: React.FC<MarketStatsProps> = ({
           </div>
 
           {/* 刻度标记 */}
-          <div className="flex justify-between mt-1 text-xs text-gray-500">
-            <span>极度恐惧</span>
-            <span>恐惧</span>
-            <span>中性</span>
-            <span>贪婪</span>
-            <span>极度贪婪</span>
+          <div className="progress-bar-labels">
+            <span className="progress-label-mobile">恐惧</span>
+            <span className="progress-label-tablet">极度恐惧</span>
+            <span className="progress-label-desktop">极度恐惧</span>
+            <span className="progress-label-desktop">恐惧</span>
+            <span className="progress-label-desktop">中性</span>
+            <span className="progress-label-desktop">贪婪</span>
+            <span className="progress-label-tablet">极度贪婪</span>
+            <span className="progress-label-desktop">极度贪婪</span>
+            <span className="progress-label-mobile">贪婪</span>
           </div>
         </div>
       </div>
 
       {/* 更新时间 */}
-      <div className="mt-4 text-center text-xs text-gray-500">
+      <div className="mt-3 sm:mt-4 text-center text-xs text-gray-500">
         最后更新: {new Date().toLocaleString("zh-CN")}
       </div>
     </div>
