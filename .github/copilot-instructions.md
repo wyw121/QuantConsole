@@ -23,7 +23,6 @@
 - ✅ **数据库迁移**：`run_in_terminal` → `cd backend/migration && cargo run`
 - ✅ **前端构建**：`run_in_terminal` → `cd frontend && npm run build`
 - ✅ **后端构建**：`run_in_terminal` → `cd backend && cargo build --release`
-- ✅ **Docker 服务**：`run_in_terminal` → `docker-compose up -d`
 
 ### 违规检测
 
