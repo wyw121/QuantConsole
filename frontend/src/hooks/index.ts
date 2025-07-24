@@ -1,3 +1,6 @@
+// Market data hooks export
+export * from "./useMarketData";
+
 import { authApi } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useNotificationStore } from "@/store/ui";

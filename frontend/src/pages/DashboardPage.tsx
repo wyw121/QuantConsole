@@ -1,14 +1,23 @@
-import { Button } from '@/components/Button'
-import { Card, CardBody, CardHeader } from '@/components/UI'
-import { useAuth } from '@/hooks'
-import React from 'react'
+import { Button } from "@/components/Button";
+import { Card, CardBody, CardHeader } from "@/components/UI";
+import { useAuth } from "@/hooks";
+import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  Globe,
+  Settings,
+  TrendingUp,
+} from "lucide-react";
+import React from "react";
+import { Link } from "react-router-dom";
 
 export const DashboardPage: React.FC = () => {
-  const { user, logout } = useAuth()
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    await logout()
-  }
+    await logout();
+  };
 
   return (
     <div className="min-h-screen bg-dark-950">
@@ -17,20 +26,14 @@ export const DashboardPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold gradient-text">
-                QuantConsole
-              </h1>
+              <h1 className="text-xl font-bold gradient-text">QuantConsole</h1>
             </div>
 
             <div className="flex items-center space-x-4">
               <span className="text-gray-300">
                 欢迎, {user?.username || user?.email}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-              >
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
                 登出
               </Button>
             </div>
@@ -47,9 +50,7 @@ export const DashboardPage: React.FC = () => {
               <h2 className="text-2xl font-semibold text-gray-100">
                 欢迎使用 QuantConsole
               </h2>
-              <p className="text-gray-400 mt-1">
-                您的专业加密货币交易控制台
-              </p>
+              <p className="text-gray-400 mt-1">您的专业加密货币交易控制台</p>
             </CardHeader>
             <CardBody>
               <div className="space-y-4">
@@ -67,13 +68,119 @@ export const DashboardPage: React.FC = () => {
             </CardBody>
           </Card>
 
+          {/* 功能模块卡片 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* 交易控制台 */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-green-600/20 rounded-lg mr-3">
+                      <BarChart3 className="w-6 h-6 text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-100">
+                        交易控制台
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        实时行情与交易分析
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-400 transition-colors" />
+                </div>
+              </CardHeader>
+              <CardBody>
+                <p className="text-gray-300 mb-4">
+                  专业的加密货币交易界面，提供实时价格数据、K线图表、订单簿深度和技术指标分析。
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-sm text-gray-400">
+                    <span className="flex items-center">
+                      <Activity className="w-4 h-4 mr-1" />
+                      实时数据
+                    </span>
+                    <span className="flex items-center">
+                      <Globe className="w-4 h-4 mr-1" />
+                      多交易所
+                    </span>
+                  </div>
+                  <Link to="/trading">
+                    <Button variant="primary" size="sm">
+                      进入控制台
+                    </Button>
+                  </Link>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 交易记录 */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-blue-600/20 rounded-lg mr-3">
+                      <TrendingUp className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-100">
+                        交易记录
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        管理和分析交易历史
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                </div>
+              </CardHeader>
+              <CardBody>
+                <p className="text-gray-300 mb-4">
+                  详细的交易记录管理，包括盈亏分析、统计报表和交易策略回测功能。
+                </p>
+                <div className="text-center text-gray-500 py-2">
+                  功能开发中...
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 交易所配置 */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-purple-600/20 rounded-lg mr-3">
+                      <Settings className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-100">
+                        交易所配置
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        配置 API 密钥和参数
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition-colors" />
+                </div>
+              </CardHeader>
+              <CardBody>
+                <p className="text-gray-300 mb-4">
+                  安全配置欧易、币安等交易所的 API
+                  密钥，支持现货和合约交易接口。
+                </p>
+                <div className="text-center text-gray-500 py-2">
+                  功能开发中...
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+
           {/* 用户信息卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-medium text-gray-100">
-                  账户信息
-                </h3>
+                <h3 className="text-lg font-medium text-gray-100">账户信息</h3>
               </CardHeader>
               <CardBody>
                 <div className="space-y-3">
@@ -87,14 +194,26 @@ export const DashboardPage: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">邮箱验证:</span>
-                    <span className={user?.isEmailVerified ? 'text-green-400' : 'text-yellow-400'}>
-                      {user?.isEmailVerified ? '已验证' : '未验证'}
+                    <span
+                      className={
+                        user?.isEmailVerified
+                          ? "text-green-400"
+                          : "text-yellow-400"
+                      }
+                    >
+                      {user?.isEmailVerified ? "已验证" : "未验证"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">双因素认证:</span>
-                    <span className={user?.isTwoFactorEnabled ? 'text-green-400' : 'text-gray-400'}>
-                      {user?.isTwoFactorEnabled ? '已启用' : '未启用'}
+                    <span
+                      className={
+                        user?.isTwoFactorEnabled
+                          ? "text-green-400"
+                          : "text-gray-400"
+                      }
+                    >
+                      {user?.isTwoFactorEnabled ? "已启用" : "未启用"}
                     </span>
                   </div>
                 </div>
@@ -103,9 +222,7 @@ export const DashboardPage: React.FC = () => {
 
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-medium text-gray-100">
-                  快速操作
-                </h3>
+                <h3 className="text-lg font-medium text-gray-100">快速操作</h3>
               </CardHeader>
               <CardBody>
                 <div className="space-y-3">
@@ -133,9 +250,7 @@ export const DashboardPage: React.FC = () => {
           {/* 系统状态 */}
           <Card>
             <CardHeader>
-              <h3 className="text-lg font-medium text-gray-100">
-                系统状态
-              </h3>
+              <h3 className="text-lg font-medium text-gray-100">系统状态</h3>
             </CardHeader>
             <CardBody>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -144,7 +259,9 @@ export const DashboardPage: React.FC = () => {
                   <div className="text-sm text-gray-400">系统稳定性</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">&lt; 50ms</div>
+                  <div className="text-2xl font-bold text-blue-400">
+                    &lt; 50ms
+                  </div>
                   <div className="text-sm text-gray-400">平均响应时间</div>
                 </div>
                 <div className="text-center">
@@ -157,5 +274,5 @@ export const DashboardPage: React.FC = () => {
         </div>
       </main>
     </div>
-  )
-}
+  );
+};
