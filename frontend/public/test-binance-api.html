@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance API 连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background-color: #2a2a2a;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .success { background-color: #4a5d23; color: #90c695; }
+        .error { background-color: #5d2323; color: #c69090; }
+        .loading { background-color: #4a4a23; color: #c6c690; }
+        pre {
+            background-color: #333;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #005a9c;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Binance API 连接测试</h1>
+
+    <div class="test-section">
+        <h2>📊 测试 24h Ticker API</h2>
+        <button onclick="testTickerAPI()">测试 Ticker API</button>
+        <div id="ticker-status" class="status loading">等待测试...</div>
+        <pre id="ticker-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>📈 测试 K线数据 API</h2>
+        <button onclick="testKlineAPI()">测试 Kline API</button>
+        <div id="kline-status" class="status loading">等待测试...</div>
+        <pre id="kline-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>📚 测试订单簿 API</h2>
+        <button onclick="testDepthAPI()">测试 Depth API</button>
+        <div id="depth-status" class="status loading">等待测试...</div>
+        <pre id="depth-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>🔌 测试 WebSocket 连接</h2>
+        <button onclick="testWebSocket()">测试 WebSocket</button>
+        <div id="ws-status" class="status loading">等待测试...</div>
+        <pre id="ws-result"></pre>
+    </div>
+
+    <script>
+        async function testTickerAPI() {
+            const statusEl = document.getElementById('ticker-status');
+            const resultEl = document.getElementById('ticker-result');
+
+            statusEl.textContent = '正在测试...';
+            statusEl.className = 'status loading';
+            resultEl.textContent = '';
+
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    statusEl.textContent = '✅ API 连接成功';
+                    statusEl.className = 'status success';
+                    resultEl.textContent = `BTC价格: $${parseFloat(data.lastPrice).toFixed(2)}\n24h涨跌: ${parseFloat(data.priceChangePercent).toFixed(2)}%\n24h成交量: ${(parseFloat(data.volume) / 1000).toFixed(1)}K BTC`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ API 连接失败';
+                statusEl.className = 'status error';
+                resultEl.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        async function testKlineAPI() {
+            const statusEl = document.getElementById('kline-status');
+            const resultEl = document.getElementById('kline-result');
+
+            statusEl.textContent = '正在测试...';
+            statusEl.className = 'status loading';
+            resultEl.textContent = '';
+
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=5');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    statusEl.textContent = '✅ K线 API 连接成功';
+                    statusEl.className = 'status success';
+
+                    const latestKline = data[data.length - 1];
+                    resultEl.textContent = `获取到 ${data.length} 根K线\n最新K线:\n  开盘: $${parseFloat(latestKline[1]).toFixed(2)}\n  最高: $${parseFloat(latestKline[2]).toFixed(2)}\n  最低: $${parseFloat(latestKline[3]).toFixed(2)}\n  收盘: $${parseFloat(latestKline[4]).toFixed(2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ K线 API 连接失败';
+                statusEl.className = 'status error';
+                resultEl.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        async function testDepthAPI() {
+            const statusEl = document.getElementById('depth-status');
+            const resultEl = document.getElementById('depth-result');
+
+            statusEl.textContent = '正在测试...';
+            statusEl.className = 'status loading';
+            resultEl.textContent = '';
+
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=5');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    statusEl.textContent = '✅ 订单簿 API 连接成功';
+                    statusEl.className = 'status success';
+
+                    const bestBid = parseFloat(data.bids[0][0]);
+                    const bestAsk = parseFloat(data.asks[0][0]);
+                    const spread = bestAsk - bestBid;
+                    resultEl.textContent = `买盘深度: ${data.bids.length} 档\n卖盘深度: ${data.asks.length} 档\n最优买价: $${bestBid.toFixed(2)}\n最优卖价: $${bestAsk.toFixed(2)}\n价差: $${spread.toFixed(2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ 订单簿 API 连接失败';
+                statusEl.className = 'status error';
+                resultEl.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        function testWebSocket() {
+            const statusEl = document.getElementById('ws-status');
+            const resultEl = document.getElementById('ws-result');
+
+            statusEl.textContent = '正在连接...';
+            statusEl.className = 'status loading';
+            resultEl.textContent = '';
+
+            try {
+                const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+                let messageCount = 0;
+                const maxMessages = 3;
+                let messages = [];
+
+                ws.onopen = () => {
+                    statusEl.textContent = '✅ WebSocket 连接成功';
+                    statusEl.className = 'status success';
+                    messages.push('WebSocket 连接已建立');
+                    resultEl.textContent = messages.join('\n');
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    messageCount++;
+
+                    messages.push(`第 ${messageCount} 条数据: ${data.s} - $${parseFloat(data.c).toFixed(2)} (${parseFloat(data.P).toFixed(2)}%)`);
+                    resultEl.textContent = messages.join('\n');
+
+                    if (messageCount >= maxMessages) {
+                        ws.close();
+                        statusEl.textContent = '✅ WebSocket 测试完成';
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    statusEl.textContent = '❌ WebSocket 连接错误';
+                    statusEl.className = 'status error';
+                    resultEl.textContent = `错误: ${error.message || 'WebSocket 连接失败'}`;
+                };
+
+                ws.onclose = () => {
+                    messages.push('WebSocket 连接已关闭');
+                    resultEl.textContent = messages.join('\n');
+                };
+
+                // 10秒后超时
+                setTimeout(() => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.close();
+                    }
+                    if (messageCount === 0) {
+                        statusEl.textContent = '⏰ WebSocket 测试超时';
+                        statusEl.className = 'status error';
+                        resultEl.textContent = '10秒内未收到数据，可能是网络问题';
+                    }
+                }, 10000);
+
+            } catch (error) {
+                statusEl.textContent = '❌ WebSocket 测试失败';
+                statusEl.className = 'status error';
+                resultEl.textContent = `错误: ${error.message}`;
+            }
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🧪 Binance API 测试页面已加载');
+            console.log('请点击各个测试按钮来检查 Binance API 的连接状况');
+        });
+    </script>
+</body>
+</html>

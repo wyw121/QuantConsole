@@ -1,8 +1,10 @@
 import { NotificationContainer } from "@/components/NotificationContainer";
 import "@/index.css";
 import { DashboardPage } from "@/pages/DashboardPage";
+import ExchangeDataComparison from "@/pages/ExchangeDataComparison";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
+import { TestCoinGecko } from "@/pages/TestCoinGecko";
 import { TradingDashboardPage } from "@/pages/TradingDashboardPage";
 import { useAuthStore } from "@/store/auth";
 import React from "react";
@@ -92,6 +94,14 @@ function App() {
                   <TradingDashboardPage />
                 </ProtectedRoute>
               }
+            />
+
+            {/* 测试页面 */}
+            <Route path="/test/coingecko" element={<TestCoinGecko />} />
+
+            <Route
+              path="/test/comparison"
+              element={<ExchangeDataComparison />}
             />
 
             {/* 404 页面 */}

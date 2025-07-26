@@ -1,4 +1,4 @@
-import { marketDataService } from "@/services/marketData";
+import { marketDataService } from "@/services/unifiedMarketData";
 import { CandlestickData, OrderBook, PriceData } from "@/types/trading";
 import { useCallback, useEffect, useState } from "react";
 
@@ -27,15 +27,29 @@ export const useMarketData = () => {
         // 为每个交易对生成历史K线数据
         const pairs = marketDataService.getTradingPairs();
         const candleMap = new Map();
-        pairs.forEach((pair) => {
-          const candles = marketDataService.generateHistoricalCandles(
-            pair.symbol
-          );
-          candleMap.set(pair.symbol, candles);
+
+        // 使用Promise.all来并行获取所有历史数据
+        const candlePromises = pairs.map(async (pair) => {
+          try {
+            const candles = await marketDataService.generateHistoricalCandles(
+              pair.symbol
+            );
+            return { symbol: pair.symbol, candles };
+          } catch (error) {
+            console.error(`获取 ${pair.symbol} 历史数据失败:`, error);
+            return { symbol: pair.symbol, candles: [] };
+          }
         });
+
+        const candleResults = await Promise.all(candlePromises);
+        candleResults.forEach(({ symbol, candles }) => {
+          candleMap.set(symbol, candles);
+        });
+
         setCandlestickData(candleMap);
       }
     } catch (error) {
+      console.error("连接市场数据失败:", error);
       setConnectionError("连接市场数据失败");
       setIsConnected(false);
     }
@@ -129,10 +143,20 @@ export const useMarketData = () => {
   );
 
   // 选择交易对
-  const selectSymbol = useCallback((symbol: string) => {
+  const selectSymbol = useCallback(async (symbol: string) => {
     setSelectedSymbol(symbol);
     // 清除之前的订单簿数据
     setOrderBook(null);
+
+    // 尝试获取选中交易对的订单簿数据
+    try {
+      const orderBookData = await marketDataService.fetchOrderBook(symbol);
+      if (orderBookData) {
+        setOrderBook(orderBookData);
+      }
+    } catch (error) {
+      console.error(`获取 ${symbol} 订单簿失败:`, error);
+    }
   }, []);
 
   return {

@@ -1,4 +1,5 @@
 import { Button } from "@/components/Button";
+import { DataSourceSwitcher } from "@/components/DataSourceSwitcher";
 import { MarketStats, MarketStatus } from "@/components/MarketStats";
 import { OrderBook } from "@/components/OrderBook";
 import { PriceTicker, TopTicker } from "@/components/PriceTicker";
@@ -14,6 +15,7 @@ import {
   Minimize2,
   RefreshCw,
   Search,
+  Settings,
   Star,
   Wifi,
   WifiOff,
@@ -46,6 +48,7 @@ export const TradingDashboardPage: React.FC = () => {
   } = useTradingPairs();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<"chart" | "orderbook" | "trades">(
     "chart"
   );
@@ -99,6 +102,15 @@ export const TradingDashboardPage: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSettings(!showSettings)}
+              >
+                <Settings className="w-4 h-4 mr-1" />
+                设置
+              </Button>
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -378,6 +390,19 @@ export const TradingDashboardPage: React.FC = () => {
 
           {/* 右侧边栏 */}
           <div className={`trading-sidebar-right ${isFullscreen ? "" : ""}`}>
+            {/* 数据源设置 */}
+            {showSettings && (
+              <div className="min-w-0 mb-4">
+                <DataSourceSwitcher
+                  isConnected={isConnected}
+                  onConnectionChange={(connected) => {
+                    // 可以在这里处理连接状态变化
+                    console.log(`连接状态变化: ${connected}`);
+                  }}
+                />
+              </div>
+            )}
+
             {/* 市场统计 */}
             <div className="min-w-0">
               <MarketStats />
