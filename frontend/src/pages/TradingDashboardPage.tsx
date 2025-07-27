@@ -1,5 +1,7 @@
 import { Button } from "@/components/Button";
+import { ConnectionStatusIndicator } from "@/components/ConnectionStatusIndicator";
 import { DataSourceSwitcher } from "@/components/DataSourceSwitcher";
+import { ExchangeSelector } from "@/components/ExchangeSelector";
 import { MarketStats, MarketStatus } from "@/components/MarketStats";
 import { OrderBook } from "@/components/OrderBook";
 import { PriceTicker, TopTicker } from "@/components/PriceTicker";
@@ -7,6 +9,7 @@ import { QuickTradePanel } from "@/components/QuickTradePanel";
 import { RecentTrades } from "@/components/RecentTrades";
 import { TradingChart } from "@/components/TradingChart";
 import { useAuth, useMarketData, useTradingPairs } from "@/hooks";
+import { useExchangeManager } from "@/hooks/useExchangeManager";
 import {
   Activity,
   BarChart3,
@@ -17,8 +20,6 @@ import {
   Search,
   Settings,
   Star,
-  Wifi,
-  WifiOff,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
@@ -26,7 +27,6 @@ export const TradingDashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
   const {
     isConnected,
-    connectionError,
     priceData,
     selectedSymbol,
     orderBook,
@@ -36,6 +36,14 @@ export const TradingDashboardPage: React.FC = () => {
     getCandlesBySymbol,
     getPriceBySymbol,
   } = useMarketData();
+
+  const {
+    exchanges,
+    selectedExchange,
+    connectionStatus,
+    switchExchange,
+    reconnect,
+  } = useExchangeManager();
 
   const {
     favorites,
@@ -58,6 +66,21 @@ export const TradingDashboardPage: React.FC = () => {
     connect();
     return () => disconnect();
   }, [connect, disconnect]);
+
+  // 监听交易所切换，重新连接市场数据
+  useEffect(() => {
+    if (connectionStatus.status === "connected") {
+      console.log(
+        `🔄 检测到交易所切换为: ${selectedExchange}，重新连接市场数据...`
+      );
+      // 延迟一下确保数据源已经切换完成
+      const timer = setTimeout(() => {
+        connect();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedExchange, connectionStatus.status, connect]);
 
   const handleLogout = async () => {
     await logout();
@@ -83,22 +106,15 @@ export const TradingDashboardPage: React.FC = () => {
             <div className="flex items-center space-x-6">
               <h1 className="text-xl font-bold gradient-text">QuantConsole</h1>
 
+              {/* 交易所选择器 */}
+              <ExchangeSelector
+                exchanges={exchanges}
+                selectedExchange={selectedExchange}
+                onExchangeChange={switchExchange}
+              />
+
               {/* 连接状态 */}
-              <div className="flex items-center space-x-2">
-                {isConnected ? (
-                  <>
-                    <Wifi className="w-4 h-4 text-green-400" />
-                    <span className="text-sm text-green-400">已连接</span>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="w-4 h-4 text-red-400" />
-                    <span className="text-sm text-red-400">
-                      {connectionError || "连接中..."}
-                    </span>
-                  </>
-                )}
-              </div>
+              <ConnectionStatusIndicator status={connectionStatus} />
             </div>
 
             <div className="flex items-center space-x-4">
@@ -114,15 +130,23 @@ export const TradingDashboardPage: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={connect}
-                disabled={isConnected}
+                onClick={() => {
+                  if (connectionStatus.status === "connected") {
+                    reconnect();
+                  } else {
+                    connect();
+                  }
+                }}
+                disabled={connectionStatus.status === "connecting"}
               >
                 <RefreshCw
                   className={`w-4 h-4 mr-1 ${
-                    isConnected ? "animate-spin" : ""
+                    connectionStatus.status === "connecting"
+                      ? "animate-spin"
+                      : ""
                   }`}
                 />
-                刷新
+                {connectionStatus.status === "connecting" ? "连接中" : "刷新"}
               </Button>
 
               <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
@@ -239,24 +263,30 @@ export const TradingDashboardPage: React.FC = () => {
                     <h2 className="text-2xl font-bold text-white">
                       {selectedSymbol.replace("USDT", "/USDT")}
                     </h2>
-                    <button
-                      onClick={() => {
-                        if (isFavorite(selectedSymbol)) {
-                          removeFromFavorites(selectedSymbol);
-                        } else {
-                          addToFavorites(selectedSymbol);
-                        }
-                      }}
-                      className="p-1 hover:bg-dark-700 rounded"
-                    >
-                      <Star
-                        className={`w-5 h-5 ${
-                          isFavorite(selectedSymbol)
-                            ? "text-yellow-400 fill-current"
-                            : "text-gray-400"
-                        }`}
-                      />
-                    </button>
+                    {/* 数据源标识 */}
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs px-2 py-1 bg-blue-600/20 text-blue-400 rounded border border-blue-500/30">
+                        {selectedExchange.toUpperCase()}
+                      </span>
+                      <button
+                        onClick={() => {
+                          if (isFavorite(selectedSymbol)) {
+                            removeFromFavorites(selectedSymbol);
+                          } else {
+                            addToFavorites(selectedSymbol);
+                          }
+                        }}
+                        className="p-1 hover:bg-dark-700 rounded"
+                      >
+                        <Star
+                          className={`w-5 h-5 ${
+                            isFavorite(selectedSymbol)
+                              ? "text-yellow-400 fill-current"
+                              : "text-gray-400"
+                          }`}
+                        />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="text-right">

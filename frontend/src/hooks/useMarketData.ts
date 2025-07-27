@@ -11,11 +11,31 @@ export const useMarketData = () => {
   >(new Map());
   const [orderBook, setOrderBook] = useState<OrderBook | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [currentDataSource, setCurrentDataSource] = useState<string>("");
+
+  // 重置所有数据状态
+  const resetAllData = useCallback(() => {
+    console.log("🔄 重置市场数据状态...");
+    setPriceData([]);
+    setCandlestickData(new Map());
+    setOrderBook(null);
+    setConnectionError(null);
+  }, []);
 
   // 连接到市场数据服务
   const connect = useCallback(async () => {
     try {
       setConnectionError(null);
+
+      // 检查数据源是否发生变化
+      const newDataSource = marketDataService.getCurrentDataSource();
+      if (newDataSource !== currentDataSource) {
+        console.log(`📊 数据源变化: ${currentDataSource} → ${newDataSource}`);
+        setCurrentDataSource(newDataSource);
+        // 数据源变化时重置所有数据
+        resetAllData();
+      }
+
       const connected = await marketDataService.connect();
       setIsConnected(connected);
 
@@ -53,18 +73,23 @@ export const useMarketData = () => {
       setConnectionError("连接市场数据失败");
       setIsConnected(false);
     }
-  }, []);
+  }, [currentDataSource, resetAllData]);
 
   // 断开连接
   const disconnect = useCallback(() => {
+    console.log("🔌 断开市场数据连接...");
     marketDataService.disconnect();
     setIsConnected(false);
     setConnectionError(null);
-  }, []);
+    // 断开连接时清理数据
+    resetAllData();
+  }, [resetAllData]);
 
   // 订阅价格数据
   useEffect(() => {
     if (!isConnected) return;
+
+    console.log("📊 订阅价格数据更新...");
 
     const handlePriceUpdate = (data: PriceData) => {
       setPriceData((prev) => {
@@ -81,13 +106,16 @@ export const useMarketData = () => {
     marketDataService.subscribe("price", handlePriceUpdate);
 
     return () => {
+      console.log("📊 取消订阅价格数据更新...");
       marketDataService.unsubscribe("price", handlePriceUpdate);
     };
-  }, [isConnected]);
+  }, [isConnected, currentDataSource]); // 添加 currentDataSource 依赖
 
   // 订阅K线数据
   useEffect(() => {
     if (!isConnected) return;
+
+    console.log("📈 订阅K线数据更新...");
 
     const handleCandleUpdate = (data: {
       symbol: string;
@@ -105,13 +133,16 @@ export const useMarketData = () => {
     marketDataService.subscribe("candle", handleCandleUpdate);
 
     return () => {
+      console.log("📈 取消订阅K线数据更新...");
       marketDataService.unsubscribe("candle", handleCandleUpdate);
     };
-  }, [isConnected]);
+  }, [isConnected, currentDataSource]); // 添加 currentDataSource 依赖
 
   // 订阅订单簿数据
   useEffect(() => {
     if (!isConnected || !selectedSymbol) return;
+
+    console.log(`📋 订阅 ${selectedSymbol} 订单簿数据更新...`);
 
     const handleOrderBookUpdate = (data: OrderBook) => {
       if (data.symbol === selectedSymbol) {
@@ -122,9 +153,10 @@ export const useMarketData = () => {
     marketDataService.subscribe("orderbook", handleOrderBookUpdate);
 
     return () => {
+      console.log(`📋 取消订阅 ${selectedSymbol} 订单簿数据更新...`);
       marketDataService.unsubscribe("orderbook", handleOrderBookUpdate);
     };
-  }, [isConnected, selectedSymbol]);
+  }, [isConnected, selectedSymbol, currentDataSource]); // 添加 currentDataSource 依赖
 
   // 获取指定交易对的价格数据
   const getPriceBySymbol = useCallback(

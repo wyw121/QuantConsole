@@ -118,6 +118,16 @@ class UnifiedMarketDataService implements IMarketDataService {
   /**
    * 获取当前数据源类型
    */
+  getCurrentDataSource(): string {
+    return this.config.dataSource;
+  }
+
+  /**
+   * 检查当前服务是否连接
+   */
+  isConnectedToMarket(): boolean {
+    return this.currentService.isConnectedToMarket();
+  }
   getCurrentDataSource(): "mock" | "real" | "coingecko" | "binance" {
     return this.config.dataSource;
   }

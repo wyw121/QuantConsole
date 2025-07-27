@@ -1,4 +1,5 @@
 // Market data hooks export
+export * from "./useExchangeManager";
 export * from "./useMarketData";
 
 import { authApi } from "@/services/api";
