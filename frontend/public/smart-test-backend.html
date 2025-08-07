@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能后端测试 - QuantConsole</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .main {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .status-card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .status-header {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-success {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .status-neutral {
+            color: #6c757d;
+        }
+
+        .log-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            height: 500px;
+            overflow-y: auto;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .feature-highlight {
+            background: linear-gradient(90deg, #17a2b8, #138496);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .feature-highlight h3 {
+            margin: 0 0 10px 0;
+        }
+
+        .demo-data-info {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 QuantConsole 智能后端测试</h1>
+            <p>优先测试演示数据系统，智能处理网络限制</p>
+        </div>
+
+        <div class="content">
+            <div class="sidebar">
+                <div class="demo-data-info">
+                    <h3>🎭 演示数据系统</h3>
+                    <p>本系统包含完整的演示数据生成器，无需外部API即可正常运行所有功能。</p>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">📊 系统状态</div>
+                    <div class="status-item">
+                        <span>后端服务</span>
+                        <span id="backend-status" class="status-neutral">未测试</span>
+                    </div>
+                    <div class="status-item">
+                        <span>演示数据</span>
+                        <span id="demo-status" class="status-neutral">未测试</span>
+                    </div>
+                    <div class="status-item">
+                        <span>OKX API</span>
+                        <span id="okx-status" class="status-neutral">未测试</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Binance API</span>
+                        <span id="binance-status" class="status-neutral">未测试</span>
+                    </div>
+                    <div class="status-item">
+                        <span>CoinGecko API</span>
+                        <span id="coingecko-status" class="status-neutral">未测试</span>
+                    </div>
+                </div>
+
+                <div class="feature-highlight">
+                    <h3>💡 SSR代理配置</h3>
+                    <p>要访问真实API数据，请设置环境变量：</p>
+                    <code style="display: block; margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 4px;">
+                        HTTP_PROXY=http://proxy:port<br>
+                        HTTPS_PROXY=http://proxy:port
+                    </code>
+                </div>
+            </div>
+
+            <div class="main">
+                <div class="controls">
+                    <button onclick="startSmartTest()" id="test-btn">🚀 开始智能测试</button>
+                    <button onclick="clearLog()">🧹 清空日志</button>
+                    <button onclick="testDemoOnly()">🎭 仅测试演示数据</button>
+                    <button onclick="testExternalAPIs()">🌐 测试外部API</button>
+                </div>
+
+                <div class="log-container" id="log"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logElement = document.getElementById('log');
+        let testRunning = false;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const typeColors = {
+                info: '#0c5460',
+                success: '#155724',
+                error: '#721c24',
+                warning: '#856404'
+            };
+            logElement.innerHTML += `<span style="color: #666; font-weight: bold;">[${timestamp}]</span> <span style="color: ${typeColors[type]};">${message}</span><br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status-${status}`;
+            element.textContent = text || status;
+        }
+
+        function clearLog() {
+            logElement.innerHTML = '';
+            log('📝 日志已清空，准备开始新的测试...', 'info');
+        }
+
+        function setTestingState(running) {
+            testRunning = running;
+            document.getElementById('test-btn').disabled = running;
+            document.getElementById('test-btn').textContent = running ? '🔄 测试中...' : '🚀 开始智能测试';
+        }
+
+        // 智能测试主函数
+        async function startSmartTest() {
+            if (testRunning) return;
+
+            setTestingState(true);
+            log('🎯 启动智能后端测试系统...', 'info');
+            log('💡 优先级: 演示数据 > 外部API（网络限制可能导致失败）', 'warning');
+
+            try {
+                // 1. 测试后端健康状态
+                const healthOk = await testBackendHealth();
+
+                // 2. 优先测试演示数据系统
+                const demoOk = await testDemoDataSystem();
+
+                // 3. 测试外部API（预期可能失败）
+                const externalResults = await testExternalAPIs();
+
+                // 4. 生成智能报告
+                generateSmartReport(healthOk, demoOk, externalResults);
+
+            } catch (error) {
+                log(`❌ 测试过程中发生错误: ${error.message}`, 'error');
+            } finally {
+                setTestingState(false);
+            }
+        }
+
+        // 测试后端健康状态
+        async function testBackendHealth() {
+            log('🏥 检测后端服务健康状态...', 'info');
+            updateStatus('backend-status', 'warning', '检测中...');
+
+            try {
+                const response = await fetch('http://localhost:8080/api/market/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ 后端服务正常: ${data.message}`, 'success');
+                    updateStatus('backend-status', 'success', '✅ 正常');
+                    return true;
+                } else {
+                    log(`❌ 后端服务响应异常: HTTP ${response.status}`, 'error');
+                    updateStatus('backend-status', 'error', `❌ HTTP ${response.status}`);
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ 后端服务连接失败: ${error.message}`, 'error');
+                updateStatus('backend-status', 'error', '❌ 连接失败');
+                return false;
+            }
+        }
+
+        // 测试演示数据系统
+        async function testDemoDataSystem() {
+            log('🎭 测试核心演示数据系统...', 'info');
+            updateStatus('demo-status', 'warning', '测试中...');
+
+            try {
+                // 测试不指定数据源（应该自动使用演示数据）
+                const response = await fetch('http://localhost:8080/api/market/kline?symbol=BTCUSDT&interval=1h&limit=5');
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (Array.isArray(data) && data.length > 0) {
+                        log(`✅ 演示数据系统正常: 获得 ${data.length} 条K线数据`, 'success');
+                        log(`📊 示例数据: BTCUSDT 价格=${data[0].close}, 成交量=${data[0].volume}`, 'info');
+                        log(`🕐 时间范围: ${new Date(data[0].timestamp).toLocaleString()} 至 ${new Date(data[data.length-1].timestamp).toLocaleString()}`, 'info');
+                        updateStatus('demo-status', 'success', '✅ 正常');
+                        return true;
+                    } else {
+                        log('❌ 演示数据格式错误或为空', 'error');
+                        updateStatus('demo-status', 'error', '❌ 格式错误');
+                        return false;
+                    }
+                } else {
+                    log(`❌ 演示数据请求失败: HTTP ${response.status}`, 'error');
+                    updateStatus('demo-status', 'error', `❌ HTTP ${response.status}`);
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ 演示数据系统错误: ${error.message}`, 'error');
+                updateStatus('demo-status', 'error', '❌ 系统错误');
+                return false;
+            }
+        }
+
+        // 仅测试演示数据
+        async function testDemoOnly() {
+            if (testRunning) return;
+
+            setTestingState(true);
+            log('🎭 专项测试：演示数据系统...', 'info');
+
+            try {
+                const healthOk = await testBackendHealth();
+                if (healthOk) {
+                    const demoOk = await testDemoDataSystem();
+                    if (demoOk) {
+                        log('🎉 演示数据系统完全正常！系统可以正常运行。', 'success');
+                    } else {
+                        log('❌ 演示数据系统异常，请检查后端配置。', 'error');
+                    }
+                }
+            } finally {
+                setTestingState(false);
+            }
+        }
+
+        // 测试外部API
+        async function testExternalAPIs() {
+            log('🌐 测试外部API（预期可能因网络限制失败）...', 'warning');
+
+            const results = {
+                okx: await testSpecificAPI('OKX', 'okx', 'okx-status'),
+                binance: await testSpecificAPI('Binance', 'binance', 'binance-status'),
+                coingecko: await testSpecificAPI('CoinGecko', 'coingecko', 'coingecko-status')
+            };
+
+            return results;
+        }
+
+        // 测试特定API
+        async function testSpecificAPI(name, source, statusId) {
+            log(`🔸 测试${name}数据源...`, 'info');
+            updateStatus(statusId, 'warning', '测试中...');
+
+            try {
+                const timeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('请求超时')), 25000)
+                );
+
+                const request = fetch(`http://localhost:8080/api/market/kline?symbol=BTCUSDT&source=${source}&interval=1d&limit=5`);
+
+                const response = await Promise.race([request, timeout]);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        log(`✅ ${name}数据获取成功: ${data.length}条记录`, 'success');
+                        updateStatus(statusId, 'success', '✅ 正常');
+                        return true;
+                    } else {
+                        log(`⚠️ ${name}返回空数据`, 'warning');
+                        updateStatus(statusId, 'warning', '⚠️ 空数据');
+                        return false;
+                    }
+                } else {
+                    log(`❌ ${name}请求失败: HTTP ${response.status} (可能是网络限制)`, 'error');
+                    updateStatus(statusId, 'error', '❌ 网络限制');
+                    return false;
+                }
+            } catch (error) {
+                const isNetworkError = error.message.includes('超时') ||
+                                     error.message.includes('网络') ||
+                                     error.message.includes('连接');
+
+                log(`❌ ${name}连接失败: ${error.message} ${isNetworkError ? '(网络限制)' : ''}`, 'error');
+                updateStatus(statusId, 'error', '❌ 连接失败');
+                return false;
+            }
+        }
+
+        // 生成智能报告
+        function generateSmartReport(healthOk, demoOk, externalResults) {
+            log('', 'info');
+            log('=' .repeat(60), 'info');
+            log('📊 智能测试报告', 'info');
+            log('=' .repeat(60), 'info');
+
+            // 核心系统状态
+            log(`🏥 后端服务: ${healthOk ? '✅ 正常' : '❌ 异常'}`, healthOk ? 'success' : 'error');
+            log(`🎭 演示数据: ${demoOk ? '✅ 正常' : '❌ 异常'}`, demoOk ? 'success' : 'error');
+
+            // 外部API状态
+            const externalCount = Object.values(externalResults).filter(Boolean).length;
+            log(`🌐 外部API: ${externalCount}/3 可用`, externalCount > 0 ? 'success' : 'warning');
+            log(`   - OKX: ${externalResults.okx ? '✅ 可用' : '❌ 不可用 (网络限制)'}`, externalResults.okx ? 'success' : 'warning');
+            log(`   - Binance: ${externalResults.binance ? '✅ 可用' : '❌ 不可用 (网络限制)'}`, externalResults.binance ? 'success' : 'warning');
+            log(`   - CoinGecko: ${externalResults.coingecko ? '✅ 可用' : '❌ 不可用 (网络限制)'}`, externalResults.coingecko ? 'success' : 'warning');
+
+            // 智能结论
+            log('', 'info');
+            if (healthOk && demoOk) {
+                log('🎉 核心系统完全正常！', 'success');
+                log('💡 您的QuantConsole交易控制台已准备就绪。', 'success');
+                log('🎭 演示数据系统可以提供完整的交易功能体验。', 'info');
+
+                if (externalCount === 0) {
+                    log('', 'info');
+                    log('⚠️ 外部API暂时不可用（网络限制）', 'warning');
+                    log('🔧 要访问真实市场数据，请配置SSR代理：', 'warning');
+                    log('   export HTTP_PROXY=http://your-proxy:port', 'info');
+                    log('   export HTTPS_PROXY=http://your-proxy:port', 'info');
+                    log('   然后重启后端服务', 'info');
+                } else {
+                    log(`✨ ${externalCount}个外部API可用，可获取真实市场数据！`, 'success');
+                }
+            } else {
+                log('❌ 系统存在问题，需要修复。', 'error');
+                if (!healthOk) {
+                    log('🔧 请检查后端服务是否正常启动在localhost:8080', 'error');
+                }
+                if (!demoOk) {
+                    log('🔧 请检查演示数据生成器配置', 'error');
+                }
+            }
+
+            log('=' .repeat(60), 'info');
+        }
+
+        // 页面加载时自动运行测试
+        window.addEventListener('load', function() {
+            log('🔧 页面加载完成，系统准备就绪...', 'info');
+            log('💡 点击"开始智能测试"按钮开始全面检测', 'info');
+        });
+    </script>
+</body>
+</html>

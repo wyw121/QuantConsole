@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端K线数据服务测试</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff4444; }
+        .warning { color: #ffaa00; }
+        .info { color: #44aaff; }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #444;
+        }
+        .result {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .console-output {
+            background: #111;
+            border: 1px solid #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-size: 11px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 前端K线数据服务测试</h1>
+        <p class="info">直接在前端测试K线数据服务的多源获取能力（不依赖后端）</p>
+
+        <div class="test-section">
+            <h2>🚀 前端K线数据测试</h2>
+            <p class="warning">⚠️ 这个测试直接在浏览器中运行，会遇到CORS限制</p>
+            <button onclick="runKlineTest()">运行K线数据服务测试</button>
+            <button onclick="clearResults()">清空结果</button>
+            <div id="results" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 测试配置</h2>
+            <div>
+                <label>测试交易对: </label>
+                <select id="testSymbol" style="background: #333; color: #00ff00; border: 1px solid #555; padding: 5px;">
+                    <option value="BTCUSDT">BTCUSDT</option>
+                    <option value="ETHUSDT">ETHUSDT</option>
+                </select>
+            </div>
+            <div>
+                <label>数据点数量: </label>
+                <input type="number" id="testLimit" value="5" min="1" max="100" style="background: #333; color: #00ff00; border: 1px solid #555; padding: 5px; width: 60px;">
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>💡 使用说明</h2>
+            <ul class="info">
+                <li>此测试模拟前端K线数据服务的完整逻辑</li>
+                <li>会尝试多个数据源：CoinGecko → Yahoo Finance → Binance (代理)</li>
+                <li>显示每个数据源的测试结果和返回的数据格式</li>
+                <li>可以通过浏览器控制台查看详细日志</li>
+                <li>打开浏览器开发者工具 (F12) 查看 Console 标签页获得更多信息</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 控制台输出</h2>
+            <p class="warning">打开浏览器开发者工具 (F12) 查看详细日志</p>
+            <div id="console-output" class="console-output">
+                控制台输出会在这里显示...
+            </div>
+        </div>
+    </div>
+
+    <script src="test-kline-service.js"></script>
+    <script>
+        const results = document.getElementById('results');
+        const consoleOutput = document.getElementById('console-output');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            const logEntry = `[${timestamp}] ${message}\n`;
+            results.innerHTML += `<span class="${className}">${logEntry}</span>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+            consoleOutput.innerHTML = '控制台输出会在这里显示...';
+        }
+
+        // 劫持console.log来显示输出
+        const originalConsoleLog = console.log;
+        const originalConsoleWarn = console.warn;
+        const originalConsoleError = console.error;
+
+        function addToConsoleOutput(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            let className = type;
+            if (type === 'warn') className = 'warning';
+            if (type === 'error') className = 'error';
+
+            const logEntry = `[${timestamp}] ${message}\n`;
+            consoleOutput.innerHTML += `<span class="${className}">${logEntry}</span>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'success');
+        };
+
+        console.warn = function(...args) {
+            originalConsoleWarn.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'warn');
+        };
+
+        console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'error');
+        };
+
+        async function runKlineTest() {
+            const symbol = document.getElementById('testSymbol').value;
+            const limit = parseInt(document.getElementById('testLimit').value);
+
+            clearResults();
+            log('🚀 开始K线数据服务测试...', 'info');
+            log(`📊 交易对: ${symbol}, 数据点: ${limit}`, 'info');
+            log('=' + '='.repeat(50), 'info');
+
+            try {
+                // 修改 testKlineDataService 以接受参数
+                const result = await testKlineDataServiceWithParams(symbol, '1h', limit);
+
+                log('✅ K线数据服务测试成功!', 'success');
+                log(`📈 数据源: ${result.source}`, 'success');
+                log(`📊 获得 ${result.data.length} 个数据点`, 'success');
+
+                if (result.data.length > 0) {
+                    log('🔢 示例数据:', 'success');
+                    result.data.slice(0, 3).forEach((item, index) => {
+                        const time = new Date(item.timestamp).toLocaleString();
+                        log(`  [${index + 1}] ${time} - 开盘:${item.open} 收盘:${item.close} 成交量:${item.volume}`, 'success');
+                    });
+                }
+
+            } catch (error) {
+                log(`❌ K线数据服务测试失败: ${error.message}`, 'error');
+                console.error('详细错误:', error);
+            }
+
+            log('=' + '='.repeat(50), 'info');
+            log('🏁 测试完成', 'info');
+        }
+
+        // 参数化的测试函数
+        async function testKlineDataServiceWithParams(symbol, interval, limit) {
+            console.log(`🚀 测试K线数据服务... 交易对: ${symbol}`);
+
+            // 模拟realKlineDataService.ts的逻辑
+            const fetchKlineData = async (symbol, interval, limit) => {
+                const sources = [
+                    {
+                        name: 'CoinGecko',
+                        fetch: fetchFromCoinGecko,
+                    },
+                    {
+                        name: 'Yahoo Finance',
+                        fetch: fetchFromYahoo,
+                    },
+                    {
+                        name: 'Binance (Proxy)',
+                        fetch: fetchFromBinanceProxy,
+                    }
+                ];
+
+                for (const source of sources) {
+                    try {
+                        console.log(`🔄 尝试数据源: ${source.name}`);
+                        const data = await source.fetch(symbol, interval, limit);
+                        console.log(`✅ 成功从 ${source.name} 获取 ${data.length} 个数据点`);
+                        return { success: true, data, source: source.name };
+                    } catch (error) {
+                        console.warn(`❌ ${source.name} 失败: ${error.message}`);
+                    }
+                }
+
+                throw new Error('所有数据源都失败了');
+            };
+
+            // CoinGecko 数据获取
+            async function fetchFromCoinGecko(symbol, interval, limit) {
+                const coinId = symbol.toLowerCase().includes('btc') ? 'bitcoin' : 'ethereum';
+                const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=1&interval=hourly`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const prices = data.prices || [];
+
+                return prices.map(([timestamp, price]) => ({
+                    timestamp,
+                    open: price,
+                    high: price,
+                    low: price,
+                    close: price,
+                    volume: 0,
+                    source: 'coingecko'
+                })).slice(-limit);
+            }
+
+            // Yahoo Finance 数据获取
+            async function fetchFromYahoo(symbol, interval, limit) {
+                const yahooSymbol = symbol.toUpperCase().includes('BTC') ? 'BTC-USD' : 'ETH-USD';
+                const endTime = Math.floor(Date.now() / 1000);
+                const startTime = endTime - 86400;
+
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?period1=${startTime}&period2=${endTime}&interval=1h`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const result = data.chart?.result?.[0];
+
+                if (!result?.timestamp || !result?.indicators?.quote?.[0]) {
+                    throw new Error('Invalid Yahoo Finance response format');
+                }
+
+                const timestamps = result.timestamp;
+                const quote = result.indicators.quote[0];
+
+                return timestamps.map((ts, i) => ({
+                    timestamp: ts * 1000,
+                    open: quote.open[i] || 0,
+                    high: quote.high[i] || 0,
+                    low: quote.low[i] || 0,
+                    close: quote.close[i] || 0,
+                    volume: quote.volume[i] || 0,
+                    source: 'yahoo'
+                })).slice(-limit);
+            }
+
+            // Binance 代理数据获取
+            async function fetchFromBinanceProxy(symbol, interval, limit) {
+                const corsProxies = [
+                    'https://api.allorigins.win/get?url=',
+                    'https://cors-anywhere.herokuapp.com/',
+                    'https://corsproxy.io/?'
+                ];
+
+                const binanceSymbol = symbol.toUpperCase().replace('-', '');
+                const binanceUrl = `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=1h&limit=${limit}`;
+
+                for (const proxy of corsProxies) {
+                    try {
+                        const proxyUrl = proxy.includes('allorigins')
+                            ? `${proxy}${encodeURIComponent(binanceUrl)}`
+                            : `${proxy}${binanceUrl}`;
+
+                        const response = await Promise.race([
+                            fetch(proxyUrl),
+                            new Promise((_, reject) =>
+                                setTimeout(() => reject(new Error('Timeout')), 5000)
+                            )
+                        ]);
+
+                        if (!response.ok) continue;
+
+                        let rawData;
+                        if (proxy.includes('allorigins')) {
+                            const result = await response.json();
+                            rawData = JSON.parse(result.contents);
+                        } else {
+                            rawData = await response.json();
+                        }
+
+                        return rawData.map(kline => ({
+                            timestamp: kline[0],
+                            open: parseFloat(kline[1]),
+                            high: parseFloat(kline[2]),
+                            low: parseFloat(kline[3]),
+                            close: parseFloat(kline[4]),
+                            volume: parseFloat(kline[5]),
+                            source: 'binance'
+                        }));
+
+                    } catch (error) {
+                        console.warn(`代理失败: ${proxy}`, error.message);
+                    }
+                }
+
+                throw new Error('所有Binance代理都失败了');
+            }
+
+            // 执行测试
+            return await fetchKlineData(symbol, interval, limit);
+        }
+
+        // 页面加载时的初始化
+        window.addEventListener('load', () => {
+            log('🔬 前端K线数据服务测试工具已加载', 'success');
+            log('💡 点击"运行K线数据服务测试"按钮开始测试', 'info');
+            console.log('💡 测试页面已加载，可以开始测试K线数据服务');
+        });
+    </script>
+</body>
+</html>

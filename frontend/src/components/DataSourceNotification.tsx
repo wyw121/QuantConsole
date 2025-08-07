@@ -1,8 +1,8 @@
-import { Database, Globe, XCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 interface DataSourceNotificationProps {
-  dataSource: "mock" | "real";
+  dataSource: "mock" | "real" | "coingecko" | "binance";
   isConnected: boolean;
   show: boolean;
   onHide: () => void;
@@ -19,11 +19,11 @@ export const DataSourceNotification: React.FC<DataSourceNotificationProps> = ({
   useEffect(() => {
     if (show) {
       setVisible(true);
-      // 3秒后自动隐藏
+      // 5秒后自动隐藏
       const timer = setTimeout(() => {
         setVisible(false);
         onHide();
-      }, 3000);
+      }, 5000);
 
       return () => clearTimeout(timer);
     }
@@ -35,18 +35,29 @@ export const DataSourceNotification: React.FC<DataSourceNotificationProps> = ({
     if (!isConnected) {
       return <XCircle className="w-6 h-6 text-red-400" />;
     }
-    return dataSource === "real" ? (
-      <Globe className="w-6 h-6 text-green-400" />
-    ) : (
-      <Database className="w-6 h-6 text-blue-400" />
-    );
+    return <CheckCircle className="w-6 h-6 text-green-400" />;
+  };
+
+  const getDataSourceName = (source: string) => {
+    switch (source) {
+      case "coingecko":
+        return "CoinGecko + Binance 真实数据";
+      case "binance":
+        return "Binance WebSocket 真实数据";
+      case "real":
+        return "增强版真实数据";
+      case "mock":
+        return "模拟数据 (已禁用)";
+      default:
+        return "真实数据";
+    }
   };
 
   const getMessage = () => {
     if (!isConnected) {
-      return `${dataSource === "real" ? "真实" : "模拟"}数据连接失败`;
+      return `${getDataSourceName(dataSource)}连接失败，正在重试...`;
     }
-    return `已切换到${dataSource === "real" ? "真实" : "模拟"}数据源`;
+    return `✅ 已连接到${getDataSourceName(dataSource)}`;
   };
 
   const getBgColor = () => {

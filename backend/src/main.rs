@@ -69,7 +69,9 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin("http://localhost:3000")
+            .allowed_origin("http://localhost:3001")
             .allowed_origin("http://127.0.0.1:3000")
+            .allowed_origin("http://127.0.0.1:3001")
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
             .allowed_headers(vec!["authorization", "accept", "content-type"])
             .supports_credentials();
@@ -83,6 +85,16 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/api")
                     // 健康检查
                     .route("/health", web::get().to(health_check))
+                    // 市场数据API (无需身份验证，允许前端直接访问)
+                    .service(
+                        web::scope("/market")
+                            .route("/health", web::get().to(market_data::market_health_check))
+                            .route("/kline", web::get().to(market_data::get_kline_data))
+                            .route(
+                                "/symbols",
+                                web::get().to(market_data::get_supported_symbols),
+                            ),
+                    )
                     // 认证路由 (无需身份验证)
                     .service(
                         web::scope("/auth")
@@ -103,7 +115,10 @@ async fn main() -> std::io::Result<()> {
                         web::scope("/user")
                             .wrap(JwtAuth::new(auth_service.clone()))
                             .route("/devices", web::get().to(get_active_devices))
-                            .route("/devices/{device_id}/revoke", web::post().to(revoke_device_access))
+                            .route(
+                                "/devices/{device_id}/revoke",
+                                web::post().to(revoke_device_access),
+                            )
                             .route("/logout-all", web::post().to(logout_all_devices))
                             .route("/security-events", web::get().to(get_security_events)),
                     ),

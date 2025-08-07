@@ -1,5 +1,5 @@
 import { CandlestickData, OrderBook, PriceData } from "@/types/trading";
-import { backendProxyMarketDataService } from "./backendProxyMarketData";
+import { enhancedRealMarketDataService } from "./enhancedRealMarketData";
 import { getMarketDataConfig } from "./marketDataConfig";
 
 /**
@@ -39,21 +39,21 @@ class UnifiedMarketDataService implements IMarketDataService {
     console.log("🔧 初始化统一市场数据服务...");
     console.log("📋 当前配置:", this.config);
     console.log("🚫 模拟数据已完全禁用，强制使用真实数据");
-    this.currentService = backendProxyMarketDataService;
-    console.log("📊 使用后端代理市场数据服务 (支持SSR代理)");
+    this.currentService = enhancedRealMarketDataService;
+    console.log("📊 使用增强版真实市场数据服务");
     console.log("✅ 统一市场数据服务初始化完成");
   }
 
   /**
-   * 切换数据源 - 现在始终使用后端代理服务
+   * 切换数据源 - 现在始终使用真实数据
    */
   async switchDataSource(
     dataSource: "mock" | "real" | "coingecko" | "binance"
   ): Promise<boolean> {
-    console.log(`📊 所有数据源都已重定向到后端代理服务`);
-    console.log(`📊 用户请求: ${dataSource} -> 实际使用: 后端代理 (SSR支持)`);
+    console.log(`📊 所有数据源都已重定向到真实数据服务`);
+    console.log(`📊 用户请求: ${dataSource} -> 实际使用: 增强版真实数据`);
 
-    // 更新配置但始终使用后端代理
+    // 更新配置但始终使用真实数据
     this.config.dataSource = dataSource;
     return true;
   }
@@ -69,7 +69,7 @@ class UnifiedMarketDataService implements IMarketDataService {
    * 获取数据源名称
    */
   getDataSourceName(): string {
-    return "后端代理服务 (多数据源+SSR)";
+    return "增强版真实数据";
   }
 
   /**

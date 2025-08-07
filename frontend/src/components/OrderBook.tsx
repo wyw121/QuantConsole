@@ -1,5 +1,5 @@
 import { OrderBookEntry, OrderBook as OrderBookType } from "@/types/trading";
-import { BookOpen, TrendingDown, TrendingUp } from "lucide-react";
+import { BookOpen, TrendingDown, TrendingUp, WifiOff } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 interface OrderBookProps {
@@ -30,23 +30,39 @@ export const OrderBook: React.FC<OrderBookProps> = ({
   if (!data) {
     return (
       <div className="bg-dark-800 rounded-lg p-6">
-        <div className="flex items-center justify-center">
-          <div className="animate-pulse text-gray-400">加载订单簿...</div>
+        <div className="flex items-center justify-center text-center">
+          <div className="space-y-2">
+            <WifiOff className="w-8 h-8 text-gray-400 mx-auto animate-pulse" />
+            <div className="text-gray-400">正在获取订单簿数据...</div>
+            <div className="text-xs text-gray-500">连接真实市场数据中</div>
+          </div>
         </div>
       </div>
     );
   }
 
-  const formatPrice = (price: number) => price.toFixed(2);
-  const formatAmount = (amount: number) => amount.toFixed(4);
+  const formatPrice = (price: number) => {
+    // 根据价格大小决定显示精度
+    if (price >= 1000) return price.toFixed(2);
+    if (price >= 1) return price.toFixed(4);
+    return price.toFixed(6);
+  };
+
+  const formatAmount = (amount: number) => {
+    if (amount >= 1000) return amount.toFixed(2);
+    if (amount >= 1) return amount.toFixed(4);
+    return amount.toFixed(6);
+  };
 
   // 计算最大数量用于显示深度条
-  const maxBidAmount = Math.max(
-    ...data.bids.slice(0, maxEntries).map((b) => b.amount)
-  );
-  const maxAskAmount = Math.max(
-    ...data.asks.slice(0, maxEntries).map((a) => a.amount)
-  );
+  const maxBidAmount =
+    data.bids.length > 0
+      ? Math.max(...data.bids.slice(0, maxEntries).map((b) => b.amount))
+      : 0;
+  const maxAskAmount =
+    data.asks.length > 0
+      ? Math.max(...data.asks.slice(0, maxEntries).map((a) => a.amount))
+      : 0;
   const maxAmount = Math.max(maxBidAmount, maxAskAmount);
 
   // 订单簿条目组件
@@ -94,22 +110,33 @@ export const OrderBook: React.FC<OrderBookProps> = ({
       {/* 头部 */}
       <div className="p-4 border-b border-dark-700">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-white flex items-center">
-            <BookOpen className="w-5 h-5 mr-2 text-blue-400" />
-            订单簿 - {data.symbol}
-          </h3>
+          <div className="flex items-center">
+            <h3 className="text-lg font-medium text-white flex items-center">
+              <BookOpen className="w-5 h-5 mr-2 text-blue-400" />
+              订单簿 - {data.symbol}
+            </h3>
+            {/* 真实数据标识 */}
+            <span className="ml-3 text-xs px-2 py-1 bg-green-600/20 text-green-400 rounded border border-green-500/30">
+              实时数据
+            </span>
+          </div>
 
-          {/* 价差信息 */}
-          {spreadInfo && (
-            <div className="text-right text-sm">
-              <div className="text-gray-300">
-                价差: ${spreadInfo.spread.toFixed(2)}
-              </div>
-              <div className="text-gray-500">
-                ({spreadInfo.spreadPercent.toFixed(3)}%)
-              </div>
+          {/* 价差信息和更新时间 */}
+          <div className="text-right text-sm">
+            {spreadInfo && (
+              <>
+                <div className="text-gray-300">
+                  价差: ${spreadInfo.spread.toFixed(6)}
+                </div>
+                <div className="text-gray-500">
+                  ({spreadInfo.spreadPercent.toFixed(3)}%)
+                </div>
+              </>
+            )}
+            <div className="text-xs text-gray-500 mt-1">
+              {new Date(data.timestamp).toLocaleTimeString("zh-CN")}
             </div>
-          )}
+          </div>
         </div>
       </div>
 

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K线数据API测试</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff4444; }
+        .warning { color: #ffaa00; }
+        .info { color: #44aaff; }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #444;
+        }
+        .result {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 K线数据API测试工具</h1>
+        <p class="info">测试各种API源获取真实K线数据的能力</p>
+
+        <div class="test-section">
+            <h2>📊 API测试结果</h2>
+            <button onclick="testCoinGecko()">测试 CoinGecko API</button>
+            <button onclick="testYahooFinance()">测试 Yahoo Finance API</button>
+            <button onclick="testBinanceProxy()">测试 Binance (代理)</button>
+            <button onclick="testAllSources()">测试所有数据源</button>
+            <button onclick="clearResults()">清空结果</button>
+            <div id="results" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 网络连通性测试</h2>
+            <button onclick="testConnectivity()">测试网络连接</button>
+            <div id="connectivity-results" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        const connectivityResults = document.getElementById('connectivity-results');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            const logEntry = `[${timestamp}] ${message}\n`;
+            results.innerHTML += `<span class="${className}">${logEntry}</span>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function logConnectivity(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            const logEntry = `[${timestamp}] ${message}\n`;
+            connectivityResults.innerHTML += `<span class="${className}">${logEntry}</span>`;
+            connectivityResults.scrollTop = connectivityResults.scrollHeight;
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+            connectivityResults.innerHTML = '';
+        }
+
+        async function testCoinGecko() {
+            log('🔍 测试 CoinGecko API...', 'info');
+            try {
+                const url = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1&interval=hourly';
+                log(`📡 请求: ${url}`, 'info');
+
+                const response = await fetch(url);
+                log(`📊 状态: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const priceCount = data.prices?.length || 0;
+                    const volumeCount = data.total_volumes?.length || 0;
+                    log(`✅ 成功! 获得 ${priceCount} 个价格点, ${volumeCount} 个成交量点`, 'success');
+                    log(`📈 示例数据: ${JSON.stringify(data.prices?.slice(-3), null, 2)}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ 失败: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testYahooFinance() {
+            log('🔍 测试 Yahoo Finance API...', 'info');
+            try {
+                const endTime = Math.floor(Date.now() / 1000);
+                const startTime = endTime - 86400; // 1天前
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/BTC-USD?period1=${startTime}&period2=${endTime}&interval=1h`;
+
+                log(`📡 请求: ${url}`, 'info');
+
+                const response = await fetch(url);
+                log(`📊 状态: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const result = data.chart?.result?.[0];
+                    const timestampCount = result?.timestamp?.length || 0;
+                    log(`✅ 成功! 获得 ${timestampCount} 个时间点`, 'success');
+
+                    if (result?.indicators?.quote?.[0]) {
+                        const quote = result.indicators.quote[0];
+                        log(`📈 OHLC数据可用: Open=${quote.open?.length}, High=${quote.high?.length}, Low=${quote.low?.length}, Close=${quote.close?.length}`, 'success');
+
+                        // 显示最后几个数据点
+                        const lastIndex = timestampCount - 1;
+                        if (lastIndex >= 0) {
+                            log(`🔢 最新数据: Time=${new Date(result.timestamp[lastIndex] * 1000).toLocaleString()}, Close=${quote.close[lastIndex]}`, 'success');
+                        }
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ 失败: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBinanceProxy() {
+            log('🔍 测试 Binance API (通过代理)...', 'info');
+
+            const corsProxies = [
+                'https://api.allorigins.win/get?url=',
+                'https://cors-anywhere.herokuapp.com/',
+                'https://corsproxy.io/?'
+            ];
+
+            const binanceUrl = 'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=5';
+
+            for (let i = 0; i < corsProxies.length; i++) {
+                const proxy = corsProxies[i];
+                log(`🔄 尝试代理 ${i + 1}: ${proxy}`, 'info');
+
+                try {
+                    const proxyUrl = proxy.includes('allorigins')
+                        ? `${proxy}${encodeURIComponent(binanceUrl)}`
+                        : `${proxy}${binanceUrl}`;
+
+                    log(`📡 请求: ${proxyUrl}`, 'info');
+
+                    const response = await Promise.race([
+                        fetch(proxyUrl),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
+                    ]);
+
+                    log(`📊 状态: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'warning');
+
+                    if (response.ok) {
+                        let data;
+                        if (proxy.includes('allorigins')) {
+                            const result = await response.json();
+                            if (result.contents) {
+                                data = JSON.parse(result.contents);
+                            } else {
+                                throw new Error('No contents in allorigins response');
+                            }
+                        } else {
+                            data = await response.json();
+                        }
+
+                        if (Array.isArray(data) && data.length > 0) {
+                            log(`✅ 成功! 获得 ${data.length} 根K线`, 'success');
+                            log(`📈 示例K线: [时间, 开盘, 最高, 最低, 收盘, 成交量]`, 'success');
+                            log(`🔢 ${JSON.stringify(data[0])}`, 'success');
+                            return; // 成功，不再尝试其他代理
+                        } else {
+                            log(`⚠️ 响应格式异常: ${JSON.stringify(data).substring(0, 200)}...`, 'warning');
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        log(`❌ HTTP错误: ${errorText.substring(0, 200)}...`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ 代理 ${i + 1} 失败: ${error.message}`, 'error');
+                }
+            }
+
+            log('❌ 所有Binance代理都失败了', 'error');
+        }
+
+        async function testAllSources() {
+            log('🚀 开始测试所有数据源...', 'info');
+            log('=' + '='.repeat(50), 'info');
+
+            await testCoinGecko();
+            log('-' + '-'.repeat(50), 'info');
+
+            await testYahooFinance();
+            log('-' + '-'.repeat(50), 'info');
+
+            await testBinanceProxy();
+            log('=' + '='.repeat(50), 'info');
+            log('🏁 所有测试完成!', 'info');
+        }
+
+        async function testConnectivity() {
+            logConnectivity('🌐 测试网络连接性...', 'info');
+
+            const testUrls = [
+                { name: 'CoinGecko', url: 'https://api.coingecko.com/api/v3/ping' },
+                { name: 'Yahoo Finance', url: 'https://finance.yahoo.com' },
+                { name: 'Binance', url: 'https://api.binance.com/api/v3/ping' },
+                { name: 'Google', url: 'https://www.google.com' }
+            ];
+
+            for (const test of testUrls) {
+                try {
+                    logConnectivity(`🔍 测试 ${test.name}...`, 'info');
+                    const start = Date.now();
+
+                    const response = await Promise.race([
+                        fetch(test.url, {
+                            method: 'HEAD',
+                            mode: 'no-cors'  // 避免CORS问题
+                        }),
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Timeout')), 5000)
+                        )
+                    ]);
+
+                    const duration = Date.now() - start;
+                    logConnectivity(`✅ ${test.name}: 可访问 (${duration}ms)`, 'success');
+                } catch (error) {
+                    logConnectivity(`❌ ${test.name}: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // 页面加载时自动测试连接性
+        window.addEventListener('load', () => {
+            log('🚀 K线数据API测试工具已加载', 'success');
+            log('💡 点击按钮开始测试各种API源', 'info');
+        });
+    </script>
+</body>
+</html>

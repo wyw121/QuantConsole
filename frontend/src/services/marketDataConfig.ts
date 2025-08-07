@@ -37,7 +37,7 @@ export interface MarketDataConfig {
  * 默认配置
  */
 export const defaultMarketDataConfig: MarketDataConfig = {
-  // 默认使用 CoinGecko 数据源
+  // 强制使用真实数据源 - 禁用所有模拟数据
   dataSource: "coingecko",
 
   enableRealTimeData: true,
@@ -45,9 +45,9 @@ export const defaultMarketDataConfig: MarketDataConfig = {
   enableCandlestickData: true,
 
   updateInterval: {
-    price: 1000, // 价格数据每秒更新
-    orderbook: 2000, // 订单簿每2秒更新
-    candle: 5000, // K线数据每5秒更新
+    price: 30000, // CoinGecko API限制：30秒更新一次
+    orderbook: 60000, // 订单簿60秒更新
+    candle: 300000, // K线数据5分钟更新
   },
 
   supportedSymbols: [

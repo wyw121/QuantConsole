@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后端API代理测试</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff4444; }
+        .warning { color: #ffaa00; }
+        .info { color: #44aaff; }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #444;
+        }
+        .result {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-online { background: #00ff00; }
+        .status-offline { background: #ff4444; }
+        .status-unknown { background: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 后端市场数据API代理测试</h1>
+        <p class="info">测试通过后端代理服务获取真实K线数据</p>
+
+        <div class="test-section">
+            <h2>🔌 服务状态</h2>
+            <div id="service-status">
+                <div>前端服务: <span class="status-indicator status-online"></span><span class="success">在线 (localhost:3001)</span></div>
+                <div id="backend-status">后端服务: <span class="status-indicator status-unknown"></span><span class="warning">检测中...</span></div>
+            </div>
+            <button onclick="checkBackendHealth()">检测后端状态</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 后端API测试</h2>
+            <button onclick="testBackendMarketHealth()">测试市场数据API健康状态</button>
+            <button onclick="testBackendKlineAPI()">测试后端K线数据获取</button>
+            <button onclick="testSupportedSymbols()">获取支持的交易对</button>
+            <button onclick="testAllBackendAPIs()">测试所有后端API</button>
+            <button onclick="clearResults()">清空结果</button>
+            <div id="results" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>⚙️ API配置</h2>
+            <div>
+                <label>后端服务地址: </label>
+                <input type="text" id="backendUrl" value="http://localhost:8080" style="background: #333; color: #00ff00; border: 1px solid #555; padding: 5px; margin: 5px;">
+            </div>
+            <div>
+                <label>测试交易对: </label>
+                <select id="testSymbol" style="background: #333; color: #00ff00; border: 1px solid #555; padding: 5px; margin: 5px;">
+                    <option value="BTCUSDT">BTCUSDT</option>
+                    <option value="ETHUSDT">ETHUSDT</option>
+                    <option value="BNBUSDT">BNBUSDT</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        const backendStatus = document.getElementById('backend-status');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            const logEntry = `[${timestamp}] ${message}\n`;
+            results.innerHTML += `<span class="${className}">${logEntry}</span>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+        }
+
+        function getBackendUrl() {
+            return document.getElementById('backendUrl').value;
+        }
+
+        function getTestSymbol() {
+            return document.getElementById('testSymbol').value;
+        }
+
+        function updateBackendStatus(online, message) {
+            const indicator = backendStatus.querySelector('.status-indicator');
+            const text = backendStatus.querySelector('span:last-child');
+
+            if (online) {
+                indicator.className = 'status-indicator status-online';
+                text.className = 'success';
+                text.textContent = message || '在线';
+            } else {
+                indicator.className = 'status-indicator status-offline';
+                text.className = 'error';
+                text.textContent = message || '离线';
+            }
+        }
+
+        async function checkBackendHealth() {
+            log('🔍 检测后端服务健康状态...', 'info');
+            try {
+                const response = await fetch(`${getBackendUrl()}/api/health`);
+                log(`📊 状态: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ 后端服务在线`, 'success');
+                    log(`📈 响应数据: ${JSON.stringify(data, null, 2)}`, 'success');
+                    updateBackendStatus(true, '在线 (localhost:8080)');
+                } else {
+                    log(`❌ 后端服务异常`, 'error');
+                    updateBackendStatus(false, '异常');
+                }
+            } catch (error) {
+                log(`❌ 无法连接后端服务: ${error.message}`, 'error');
+                updateBackendStatus(false, '无法连接');
+            }
+        }
+
+        async function testBackendMarketHealth() {
+            log('🔍 测试市场数据API健康状态...', 'info');
+            try {
+                const url = `${getBackendUrl()}/api/market/health`;
+                log(`📡 请求: ${url}`, 'info');
+
+                const response = await fetch(url);
+                log(`📊 状态: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ 市场数据API在线`, 'success');
+                    log(`📈 响应数据: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ 市场数据API异常: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBackendKlineAPI() {
+            log('🔍 测试后端K线数据获取...', 'info');
+            const symbol = getTestSymbol();
+
+            try {
+                const url = `${getBackendUrl()}/api/market/kline?symbol=${symbol}&interval=1h&limit=5`;
+                log(`📡 请求: ${url}`, 'info');
+
+                const response = await fetch(url);
+                log(`📊 状态: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'warning');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ K线数据获取成功!`, 'success');
+                    log(`📈 数据源: ${data.source}`, 'success');
+                    log(`📊 数据点数量: ${data.data?.length || 0}`, 'success');
+
+                    if (data.data && data.data.length > 0) {
+                        log(`🔢 示例K线数据:`, 'success');
+                        data.data.slice(0, 3).forEach((kline, index) => {
+                            const time = new Date(kline.timestamp).toLocaleString();
+                            log(`  [${index + 1}] 时间: ${time}, 开盘: ${kline.open}, 收盘: ${kline.close}, 成交量: ${kline.volume}`, 'success');
+                        });
+                    }
+
+                    log(`🎯 完整响应: ${JSON.stringify(data, null, 2)}`, 'info');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ K线数据获取失败: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSupportedSymbols() {
+            log('🔍 获取支持的交易对列表...', 'info');
+            try {
+                const url = `${getBackendUrl()}/api/market/symbols`;
+                log(`📡 请求: ${url}`, 'info');
+
+                const response = await fetch(url);
+                log(`📊 状态: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ 支持的交易对获取成功`, 'success');
+                    log(`📈 交易对数量: ${data.symbols?.length || 0}`, 'success');
+
+                    if (data.symbols) {
+                        data.symbols.forEach(symbol => {
+                            log(`  💰 ${symbol.symbol} (${symbol.name}) - 数据源: ${symbol.sources.join(', ')}`, 'success');
+                        });
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ 获取交易对失败: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAllBackendAPIs() {
+            log('🚀 开始测试所有后端API...', 'info');
+            log('=' + '='.repeat(50), 'info');
+
+            await checkBackendHealth();
+            log('-' + '-'.repeat(30), 'info');
+
+            await testBackendMarketHealth();
+            log('-' + '-'.repeat(30), 'info');
+
+            await testSupportedSymbols();
+            log('-' + '-'.repeat(30), 'info');
+
+            await testBackendKlineAPI();
+            log('=' + '='.repeat(50), 'info');
+            log('🏁 所有后端API测试完成!', 'info');
+        }
+
+        // 页面加载时自动检测后端状态
+        window.addEventListener('load', () => {
+            log('🚀 后端API代理测试工具已加载', 'success');
+            log('💡 点击按钮测试后端提供的市场数据API', 'info');
+            checkBackendHealth();
+        });
+    </script>
+</body>
+</html>

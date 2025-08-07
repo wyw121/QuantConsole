@@ -1,6 +1,6 @@
 import { PriceData } from "@/types/trading";
 import { coinGeckoMarketDataService } from "./coinGeckoMarketData";
-import { marketDataService as mockService } from "./marketData";
+import { enhancedRealMarketDataService } from "./enhancedRealMarketData";
 import { okxMarketDataService } from "./okxMarketData";
 import { realMarketDataService } from "./realMarketData";
 
@@ -111,15 +111,15 @@ export class SmartDataAggregator {
       enabled: true,
     });
 
-    // Mock数据 - 备用数据源
-    this.dataSources.set("mock", {
-      name: "Mock Data",
-      service: mockService,
-      priority: 1,
-      weight: 0.1,
-      maxDeviation: 1.0,
+    // 增强版真实数据 - 主要数据源
+    this.dataSources.set("enhanced", {
+      name: "Enhanced Real Data",
+      service: enhancedRealMarketDataService,
+      priority: 10,
+      weight: 0.6,
+      maxDeviation: 0.05,
       timeoutMs: 1000,
-      enabled: false, // 默认禁用
+      enabled: true,
     });
 
     console.log(

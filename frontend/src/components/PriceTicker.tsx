@@ -1,7 +1,7 @@
 import { PriceData } from "@/types/trading";
 import { Activity, TrendingDown, TrendingUp } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { SimplePriceChart } from "./TradingChart";
+import { SimplePriceChart } from "./SimplePriceChart";
 
 interface PriceTickerProps {
   data: PriceData[];
