@@ -41,6 +41,7 @@ export const useAuth = () => {
           type: "success",
           title: "登录成功",
           message: `欢迎回来，${response.user.username}！`,
+          isRead: false,
         });
 
         return response;
@@ -51,6 +52,7 @@ export const useAuth = () => {
           type: "error",
           title: "登录失败",
           message,
+          isRead: false,
         });
         throw error;
       } finally {
@@ -83,6 +85,7 @@ export const useAuth = () => {
           type: "success",
           title: "注册成功",
           message: "欢迎加入 QuantConsole！",
+          isRead: false,
         });
 
         console.log("✅ [useAuth] 注册流程完成");

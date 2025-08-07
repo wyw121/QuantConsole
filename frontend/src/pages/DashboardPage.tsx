@@ -5,8 +5,12 @@ import {
   Activity,
   ArrowRight,
   BarChart3,
+  Bot,
+  Eye,
+  FileText,
   Globe,
   Settings,
+  Target,
   TrendingUp,
 } from "lucide-react";
 import React from "react";
@@ -26,7 +30,11 @@ export const DashboardPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold gradient-text">QuantConsole</h1>
+              <Link to="/dashboard">
+                <h1 className="text-xl font-bold gradient-text hover:opacity-80 transition-opacity">
+                  QuantConsole
+                </h1>
+              </Link>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -114,13 +122,145 @@ export const DashboardPage: React.FC = () => {
               </CardBody>
             </Card>
 
+            {/* 价格监控 - 新增功能 */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-blue-600/20 rounded-lg mr-3">
+                      <Eye className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-100">
+                        价格监控
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        关注代币与价格提醒
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                </div>
+              </CardHeader>
+              <CardBody>
+                <p className="text-gray-300 mb-4">
+                  自定义关注代币列表，设置智能价格提醒，多交易所数据对比分析。
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-sm text-gray-400">
+                    <span className="flex items-center">
+                      <Activity className="w-4 h-4 mr-1" />
+                      智能提醒
+                    </span>
+                    <span className="flex items-center">
+                      <Globe className="w-4 h-4 mr-1" />
+                      数据对比
+                    </span>
+                  </div>
+                  <Link to="/watchlist">
+                    <Button variant="primary" size="sm">
+                      进入监控
+                    </Button>
+                  </Link>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 交易策略 - 新增功能 */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-purple-600/20 rounded-lg mr-3">
+                      <Target className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-100">
+                        交易策略
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        策略编辑与回测系统
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition-colors" />
+                </div>
+              </CardHeader>
+              <CardBody>
+                <p className="text-gray-300 mb-4">
+                  可视化策略编辑器，支持多指标组合，历史数据回测验证。
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-sm text-gray-400">
+                    <span className="flex items-center">
+                      <BarChart3 className="w-4 h-4 mr-1" />
+                      可视编辑
+                    </span>
+                    <span className="flex items-center">
+                      <TrendingUp className="w-4 h-4 mr-1" />
+                      回测验证
+                    </span>
+                  </div>
+                  <Link to="/strategy">
+                    <Button variant="primary" size="sm">
+                      进入策略
+                    </Button>
+                  </Link>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 自动交易 - 新增功能 */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-orange-600/20 rounded-lg mr-3">
+                      <Bot className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-100">
+                        自动交易
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        智能机器人与跟单交易
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-orange-400 transition-colors" />
+                </div>
+              </CardHeader>
+              <CardBody>
+                <p className="text-gray-300 mb-4">
+                  Copy Trading跟单系统，网格交易机器人，自动化交易策略执行。
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-sm text-gray-400">
+                    <span className="flex items-center">
+                      <Bot className="w-4 h-4 mr-1" />
+                      智能机器人
+                    </span>
+                    <span className="flex items-center">
+                      <Activity className="w-4 h-4 mr-1" />
+                      自动执行
+                    </span>
+                  </div>
+                  <Link to="/trading-bot">
+                    <Button variant="primary" size="sm">
+                      进入机器人
+                    </Button>
+                  </Link>
+                </div>
+              </CardBody>
+            </Card>
+
             {/* 交易记录 */}
             <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="p-2 bg-blue-600/20 rounded-lg mr-3">
-                      <TrendingUp className="w-6 h-6 text-blue-400" />
+                      <FileText className="w-6 h-6 text-blue-400" />
                     </div>
                     <div>
                       <h3 className="text-lg font-medium text-gray-100">

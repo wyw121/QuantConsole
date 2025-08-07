@@ -13,15 +13,20 @@ import { useExchangeManager } from "@/hooks/useExchangeManager";
 import {
   Activity,
   BarChart3,
+  Bell,
   BookOpen,
+  Bot,
   Maximize2,
   Minimize2,
+  Plus,
   RefreshCw,
   Search,
   Settings,
   Star,
+  Target,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export const TradingDashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -104,7 +109,11 @@ export const TradingDashboardPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-6">
-              <h1 className="text-xl font-bold gradient-text">QuantConsole</h1>
+              <Link to="/dashboard">
+                <h1 className="text-xl font-bold gradient-text hover:opacity-80 transition-opacity">
+                  QuantConsole
+                </h1>
+              </Link>
 
               {/* 交易所选择器 */}
               <ExchangeSelector
@@ -118,6 +127,54 @@ export const TradingDashboardPage: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* 高级功能按钮组 */}
+              <div className="flex items-center space-x-2 border-r border-gray-600 pr-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  title="添加到关注列表 - 功能开发中"
+                  className="opacity-50 cursor-not-allowed"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  关注
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  title="设置价格提醒 - 功能开发中"
+                  className="opacity-50 cursor-not-allowed"
+                >
+                  <Bell className="w-4 h-4 mr-1" />
+                  提醒
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  title="交易策略 - 功能开发中"
+                  className="opacity-50 cursor-not-allowed"
+                >
+                  <Target className="w-4 h-4 mr-1" />
+                  策略
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  title="自动交易机器人 - 功能开发中"
+                  className="opacity-50 cursor-not-allowed"
+                >
+                  <Bot className="w-4 h-4 mr-1" />
+                  机器人
+                </Button>
+              </div>
+
+              {/* 原有功能按钮 */}
               <Button
                 variant="ghost"
                 size="sm"

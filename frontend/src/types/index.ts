@@ -218,7 +218,7 @@ export interface Notification {
   type: "info" | "success" | "warning" | "error";
   title: string;
   message: string;
-  isRead: boolean;
+  isRead?: boolean;
   createdAt: string;
   expiresAt?: string;
   actions?: NotificationAction[];

@@ -193,7 +193,7 @@ export const SecuritySettingsPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-100">活跃设备</h2>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={handleLogoutAllDevices}
                 className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white"

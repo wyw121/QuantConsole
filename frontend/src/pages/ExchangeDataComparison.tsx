@@ -6,6 +6,7 @@ import { smartDataAggregator } from "@/services/smartDataAggregator";
 import { PriceData } from "@/types/trading";
 import {
   AlertTriangle,
+  ArrowLeft,
   BarChart3,
   Clock,
   DollarSign,
@@ -17,6 +18,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 console.log("🔍 [DEBUG] ExchangeDataComparison.tsx 文件正在加载...");
 
@@ -55,6 +57,9 @@ interface Statistics {
 const ExchangeDataComparison: React.FC = () => {
   console.log("🔍 [DEBUG] ExchangeDataComparison 组件正在渲染...");
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [comparisons, setComparisons] = useState<DataComparison[]>([]);
   const [monitoringInterval, setMonitoringInterval] =
@@ -74,6 +79,17 @@ const ExchangeDataComparison: React.FC = () => {
     priceDeviationThreshold: 0.1, // 0.1% 价格偏差警报阈值
     maxTimeDifference: 30000, // 30秒时间差警报阈值
   });
+
+  // 判断是否从价格监控页面访问
+  const isFromWatchlist = location.pathname.startsWith("/watchlist");
+
+  const handleGoBack = () => {
+    if (isFromWatchlist) {
+      navigate("/watchlist");
+    } else {
+      navigate("/dashboard");
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -372,14 +388,23 @@ const ExchangeDataComparison: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* 头部标题 */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <BarChart3 className="text-blue-400" />
-              交易所数据差异监控
-            </h1>
-            <p className="text-gray-400 mt-2">
-              实时监控Binance、OKX、CoinGecko等多个数据源的价格差异
-            </p>
+          <div className="flex items-center">
+            <Button
+              onClick={handleGoBack}
+              className="mr-4 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              返回
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                <BarChart3 className="text-blue-400" />
+                交易所数据差异监控
+              </h1>
+              <p className="text-gray-400 mt-2">
+                实时监控Binance、OKX、CoinGecko等多个数据源的价格差异
+              </p>
+            </div>
           </div>
 
           <div className="flex gap-4">

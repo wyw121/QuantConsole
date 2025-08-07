@@ -64,7 +64,7 @@ export const useSecurityAuth = () => {
       new Date().getTimezoneOffset(),
       canvas.toDataURL(),
       navigator.hardwareConcurrency,
-      navigator.deviceMemory,
+      (navigator as any).deviceMemory,
     ].join("|");
 
     return btoa(fingerprint).substring(0, 32);
@@ -84,7 +84,7 @@ export const useSecurityAuth = () => {
         type: "warning",
         title: "会话即将过期",
         message: "您的登录会话将在5分钟内过期，请保存您的工作",
-        duration: 10000,
+        // duration: 10000,
       });
     }
 
@@ -97,7 +97,7 @@ export const useSecurityAuth = () => {
         type: "error",
         title: "设备异常",
         message: "检测到设备环境发生变化，请重新登录",
-        duration: 0, // 不自动消失
+        // duration: 0, // 不自动消失
       });
       logout();
       return;

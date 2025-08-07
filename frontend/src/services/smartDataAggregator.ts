@@ -56,7 +56,7 @@ interface DataSourceConfig {
  */
 export class SmartDataAggregator {
   private dataSources: Map<string, DataSourceConfig> = new Map();
-  private qualityReports: Map<string, DataQualityReport[]> = new Map();
+  // private qualityReports: Map<string, DataQualityReport[]> = new Map();
   private isMonitoring = false;
   private monitoringInterval: NodeJS.Timeout | null = null;
 
@@ -373,7 +373,7 @@ export class SmartDataAggregator {
   }> {
     const status: Array<any> = [];
 
-    for (const [sourceId, config] of this.dataSources) {
+    for (const [, config] of this.dataSources) {
       let connected = false;
       try {
         connected = config.service.isConnectedToMarket();
@@ -397,7 +397,7 @@ export class SmartDataAggregator {
    * 启用/禁用数据源
    */
   setDataSourceEnabled(sourceName: string, enabled: boolean): void {
-    for (const [sourceId, config] of this.dataSources) {
+    for (const [, config] of this.dataSources) {
       if (config.name === sourceName) {
         config.enabled = enabled;
         console.log(`${enabled ? "✅ 启用" : "❌ 禁用"} 数据源: ${sourceName}`);
