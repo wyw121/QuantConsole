@@ -2,7 +2,7 @@ import { CandlestickData, OrderBook, PriceData } from "@/types/trading";
 
 /**
  * OKX市场数据服务
- * 提供OKX交易所的实时加密货币价格、K线图和订单簿数据
+ * 提供OKX交易所的实时加密货币永续合约价格、K线图和订单簿数据
  */
 class OKXMarketDataService {
   private ws: WebSocket | null = null;
@@ -23,18 +23,18 @@ class OKXMarketDataService {
     "https://cors-anywhere.herokuapp.com/",
   ];
 
-  // 支持的交易对 (OKX格式)
+  // 支持的永续合约交易对 (OKX格式)
   private tradingPairs = [
-    { symbol: "BTC-USDT", baseAsset: "BTC", quoteAsset: "USDT" },
-    { symbol: "ETH-USDT", baseAsset: "ETH", quoteAsset: "USDT" },
-    { symbol: "BNB-USDT", baseAsset: "BNB", quoteAsset: "USDT" },
-    { symbol: "ADA-USDT", baseAsset: "ADA", quoteAsset: "USDT" },
-    { symbol: "SOL-USDT", baseAsset: "SOL", quoteAsset: "USDT" },
-    { symbol: "XRP-USDT", baseAsset: "XRP", quoteAsset: "USDT" },
-    { symbol: "DOT-USDT", baseAsset: "DOT", quoteAsset: "USDT" },
-    { symbol: "DOGE-USDT", baseAsset: "DOGE", quoteAsset: "USDT" },
-    { symbol: "AVAX-USDT", baseAsset: "AVAX", quoteAsset: "USDT" },
-    { symbol: "LINK-USDT", baseAsset: "LINK", quoteAsset: "USDT" },
+    { symbol: "BTC-USDT-SWAP", baseAsset: "BTC", quoteAsset: "USDT" },
+    { symbol: "ETH-USDT-SWAP", baseAsset: "ETH", quoteAsset: "USDT" },
+    { symbol: "BNB-USDT-SWAP", baseAsset: "BNB", quoteAsset: "USDT" },
+    { symbol: "ADA-USDT-SWAP", baseAsset: "ADA", quoteAsset: "USDT" },
+    { symbol: "SOL-USDT-SWAP", baseAsset: "SOL", quoteAsset: "USDT" },
+    { symbol: "XRP-USDT-SWAP", baseAsset: "XRP", quoteAsset: "USDT" },
+    { symbol: "DOT-USDT-SWAP", baseAsset: "DOT", quoteAsset: "USDT" },
+    { symbol: "DOGE-USDT-SWAP", baseAsset: "DOGE", quoteAsset: "USDT" },
+    { symbol: "AVAX-USDT-SWAP", baseAsset: "AVAX", quoteAsset: "USDT" },
+    { symbol: "LINK-USDT-SWAP", baseAsset: "LINK", quoteAsset: "USDT" },
   ];
 
   // 缓存的价格数据
@@ -52,14 +52,22 @@ class OKXMarketDataService {
       await this.fetchInitialData();
       console.log("✅ OKX初始数据获取成功");
 
-      // 建立WebSocket连接
-      await this.connectWebSocket();
+      // 设置连接状态为true，即使WebSocket失败也可以使用HTTP数据
+      this.isConnected = true;
+
+      // 建立WebSocket连接（可选）
+      try {
+        await this.connectWebSocket();
+        console.log("✅ OKX WebSocket连接成功");
+      } catch (wsError) {
+        console.warn("⚠️ OKX WebSocket连接失败，但HTTP数据可用:", wsError);
+      }
 
       return true;
     } catch (error) {
       console.error("❌ OKX连接失败:", error);
-      // 即使WebSocket失败，也可以继续使用HTTP轮询
-      return true;
+      this.isConnected = false;
+      return false;
     }
   }
 
@@ -307,7 +315,7 @@ class OKXMarketDataService {
    */
   private async fetchInitialData(): Promise<void> {
     try {
-      const directUrl = `${this.OKX_API_BASE}tickers?instType=SPOT`;
+      const directUrl = `${this.OKX_API_BASE}tickers?instType=SWAP`;
 
       for (const proxy of this.CORS_PROXIES) {
         try {
@@ -369,7 +377,7 @@ class OKXMarketDataService {
 
     const fallbackData = [
       {
-        symbol: "BTC-USDT",
+        symbol: "BTC-USDT-SWAP",
         price: 104500,
         priceChange: 2500,
         priceChangePercent: 2.45,
@@ -378,7 +386,7 @@ class OKXMarketDataService {
         volume24h: 28500000,
       },
       {
-        symbol: "ETH-USDT",
+        symbol: "ETH-USDT-SWAP",
         price: 3850,
         priceChange: -120,
         priceChangePercent: -3.02,
@@ -387,7 +395,7 @@ class OKXMarketDataService {
         volume24h: 15600000,
       },
       {
-        symbol: "BNB-USDT",
+        symbol: "BNB-USDT-SWAP",
         price: 695,
         priceChange: 15,
         priceChangePercent: 2.21,

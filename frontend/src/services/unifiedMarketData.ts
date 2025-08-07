@@ -118,7 +118,7 @@ class UnifiedMarketDataService implements IMarketDataService {
   /**
    * 获取当前数据源类型
    */
-  getCurrentDataSource(): string {
+  getCurrentDataSource(): "mock" | "real" | "coingecko" | "binance" {
     return this.config.dataSource;
   }
 
@@ -127,9 +127,6 @@ class UnifiedMarketDataService implements IMarketDataService {
    */
   isConnectedToMarket(): boolean {
     return this.currentService.isConnectedToMarket();
-  }
-  getCurrentDataSource(): "mock" | "real" | "coingecko" | "binance" {
-    return this.config.dataSource;
   }
 
   /**
@@ -188,13 +185,6 @@ class UnifiedMarketDataService implements IMarketDataService {
     quoteAsset: string;
   }> {
     return this.currentService.getTradingPairs();
-  }
-
-  /**
-   * 检查是否已连接
-   */
-  isConnectedToMarket(): boolean {
-    return this.currentService.isConnectedToMarket();
   }
 
   /**

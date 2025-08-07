@@ -2,7 +2,7 @@ import { marketDataService } from "@/services/unifiedMarketData";
 import { ConnectionStatus, ExchangeInfo, ExchangeType } from "@/types/exchange";
 import { useCallback, useEffect, useState } from "react";
 
-// 模拟的交易所配置
+// 支持永续合约交易的交易所配置
 const AVAILABLE_EXCHANGES: ExchangeInfo[] = [
   {
     id: "coingecko",
@@ -10,8 +10,8 @@ const AVAILABLE_EXCHANGES: ExchangeInfo[] = [
     displayName: "CoinGecko",
     status: "disconnected",
     features: {
-      spot: true,
-      futures: false,
+      spot: false,
+      futures: true,
       options: false,
       realtime: false,
     },
@@ -24,10 +24,10 @@ const AVAILABLE_EXCHANGES: ExchangeInfo[] = [
   {
     id: "binance",
     name: "binance",
-    displayName: "Binance",
+    displayName: "Binance Futures",
     status: "disconnected",
     features: {
-      spot: true,
+      spot: false,
       futures: true,
       options: false,
       realtime: true,
@@ -41,10 +41,10 @@ const AVAILABLE_EXCHANGES: ExchangeInfo[] = [
   {
     id: "okx",
     name: "okx",
-    displayName: "OKX",
+    displayName: "OKX Perpetual",
     status: "disconnected",
     features: {
-      spot: true,
+      spot: false,
       futures: true,
       options: true,
       realtime: true,
@@ -58,10 +58,10 @@ const AVAILABLE_EXCHANGES: ExchangeInfo[] = [
   {
     id: "mock",
     name: "mock",
-    displayName: "模拟数据",
+    displayName: "模拟永续合约",
     status: "disconnected",
     features: {
-      spot: true,
+      spot: false,
       futures: true,
       options: true,
       realtime: true,

@@ -166,8 +166,7 @@ export const DashboardPage: React.FC = () => {
               </CardHeader>
               <CardBody>
                 <p className="text-gray-300 mb-4">
-                  安全配置欧易、币安等交易所的 API
-                  密钥，支持现货和合约交易接口。
+                  安全配置欧易、币安等交易所的 API 密钥，支持永续合约交易接口。
                 </p>
                 <div className="text-center text-gray-500 py-2">
                   功能开发中...

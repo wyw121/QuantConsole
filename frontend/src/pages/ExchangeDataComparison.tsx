@@ -95,25 +95,51 @@ const ExchangeDataComparison: React.FC = () => {
       okxData: okxData.length,
     });
 
+    // 标准化交易对符号的函数
+    const normalizeSymbol = (symbol: string): string => {
+      // OKX永续合约格式: BTC-USDT-SWAP -> BTCUSDT
+      if (symbol.endsWith("-SWAP")) {
+        return symbol.replace("-SWAP", "").replace("-", "");
+      }
+      // 其他格式: BTC-USDT -> BTCUSDT, BTCUSDT -> BTCUSDT
+      return symbol.replace(/-/g, "");
+    };
+
     const comparisons: DataComparison[] = [];
 
-    // 获取所有唯一的交易对
+    // 获取所有唯一的交易对（标准化后）
     const allSymbols = new Set([
-      ...binanceData.map((d) => d.symbol),
-      ...coinGeckoData.map((d) => d.symbol.replace("-", "")),
-      ...okxData.map((d) => d.symbol.replace("-", "")),
+      ...binanceData.map((d) => normalizeSymbol(d.symbol)),
+      ...coinGeckoData.map((d) => normalizeSymbol(d.symbol)),
+      ...okxData.map((d) => normalizeSymbol(d.symbol)),
     ]);
 
     console.log("🔍 [DEBUG] 发现交易对:", Array.from(allSymbols));
+    console.log(
+      "🔍 [DEBUG] OKX原始数据:",
+      okxData.map((d) => d.symbol)
+    );
+    console.log(
+      "🔍 [DEBUG] OKX标准化后:",
+      okxData.map((d) => normalizeSymbol(d.symbol))
+    );
 
-    allSymbols.forEach((symbol) => {
-      const binancePrice = binanceData.find((d) => d.symbol === symbol);
+    allSymbols.forEach((normalizedSymbol) => {
+      const binancePrice = binanceData.find(
+        (d) => normalizeSymbol(d.symbol) === normalizedSymbol
+      );
       const coinGeckoPrice = coinGeckoData.find(
-        (d) => d.symbol.replace("-", "") === symbol
+        (d) => normalizeSymbol(d.symbol) === normalizedSymbol
       );
       const okxPrice = okxData.find(
-        (d) => d.symbol.replace("-", "") === symbol
+        (d) => normalizeSymbol(d.symbol) === normalizedSymbol
       );
+
+      console.log(`🔍 [DEBUG] 处理交易对 ${normalizedSymbol}:`, {
+        binance: !!binancePrice,
+        coinGecko: !!coinGeckoPrice,
+        okx: !!okxPrice,
+      });
 
       if (binancePrice || coinGeckoPrice || okxPrice) {
         const prices = [
@@ -152,7 +178,7 @@ const ExchangeDataComparison: React.FC = () => {
           );
 
           comparisons.push({
-            symbol,
+            symbol: normalizedSymbol, // 使用标准化的符号
             binanceData: binancePrice,
             coinGeckoData: coinGeckoPrice,
             okxData: okxPrice,
@@ -167,7 +193,9 @@ const ExchangeDataComparison: React.FC = () => {
           if (percentageDiff > config.priceDeviationThreshold) {
             setAlerts((prev) => [
               ...prev,
-              `⚠️ ${symbol}: 价格偏差 ${percentageDiff.toFixed(2)}% 超过阈值`,
+              `⚠️ ${normalizedSymbol}: 价格偏差 ${percentageDiff.toFixed(
+                2
+              )}% 超过阈值`,
             ]);
           }
         }

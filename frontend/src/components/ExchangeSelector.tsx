@@ -144,7 +144,7 @@ export const ExchangeSelector: React.FC<ExchangeSelectorProps> = ({
                     )}
                     {exchange.features.futures && (
                       <span className="text-xs px-1.5 py-0.5 bg-purple-600/20 text-purple-400 rounded">
-                        合约
+                        永续合约
                       </span>
                     )}
                     {exchange.features.realtime && (

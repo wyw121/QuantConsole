@@ -1,8 +1,8 @@
 import { CandlestickData, OrderBook, PriceData } from "@/types/trading";
 
 /**
- * 真实市场数据服务 - 连接到 Binance WebSocket API
- * 提供实时加密货币价格、K线图和订单簿数据
+ * 真实市场数据服务 - 连接到 Binance Futures WebSocket API
+ * 提供实时加密货币永续合约价格、K线图和订单簿数据
  */
 class RealMarketDataService {
   private ws: WebSocket | null = null;
@@ -13,11 +13,10 @@ class RealMarketDataService {
   private reconnectDelay = 5000;
   private heartbeatInterval: NodeJS.Timeout | null = null;
 
-  // 多个WebSocket连接点以提高稳定性
+  // 多个WebSocket连接点以提高稳定性 - 使用期货 WebSocket
   private readonly WS_ENDPOINTS = [
-    "wss://stream.binance.com:9443/ws/",
-    "wss://stream.binance.com:443/ws/",
     "wss://fstream.binance.com/ws/",
+    "wss://dstream.binance.com/ws/",
   ];
 
   // 多个CORS代理以提高成功率
@@ -27,14 +26,11 @@ class RealMarketDataService {
     "https://api.codetabs.com/v1/proxy?quest=",
   ];
 
-  private readonly BINANCE_DIRECT_API = "https://api.binance.com/api/v3/";
-  private readonly OKX_WS_PUBLIC = "wss://ws.okx.com:8443/ws/v5/public";
-  private readonly OKX_API_BASE = "https://www.okx.com/api/v5/market/";
+  private readonly BINANCE_DIRECT_API = "https://fapi.binance.com/fapi/v1/";
 
   private currentWsEndpoint = 0;
-  private currentProxy = 0;
 
-  // 支持的交易对
+  // 支持的永续合约交易对
   private tradingPairs = [
     { symbol: "BTCUSDT", baseAsset: "BTC", quoteAsset: "USDT" },
     { symbol: "ETHUSDT", baseAsset: "ETH", quoteAsset: "USDT" },
@@ -366,11 +362,11 @@ class RealMarketDataService {
   }
 
   /**
-   * 获取初始的24h ticker数据
+   * 获取初始的24h ticker数据 - 期货合约
    */
   private async fetchInitialData(): Promise<void> {
     try {
-      console.log("📊 获取初始价格数据...");
+      console.log("📊 获取初始期货合约价格数据...");
 
       const directUrl = `${this.BINANCE_DIRECT_API}ticker/24hr`;
 
