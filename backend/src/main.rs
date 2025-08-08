@@ -121,6 +121,21 @@ async fn main() -> std::io::Result<()> {
                             )
                             .route("/logout-all", web::post().to(logout_all_devices))
                             .route("/security-events", web::get().to(get_security_events)),
+                    )
+                    // 关注列表和价格提醒API (需要身份验证)
+                    .service(
+                        web::scope("/watchlist")
+                            .wrap(JwtAuth::new(auth_service.clone()))
+                            // 关注代币管理
+                            .route("/tokens", web::get().to(get_watchlist_tokens))
+                            .route("/tokens", web::post().to(create_watchlist_token))
+                            .route("/tokens/{token_id}", web::put().to(update_watchlist_token))
+                            .route("/tokens/{token_id}", web::delete().to(delete_watchlist_token))
+                            // 价格提醒管理
+                            .route("/alerts", web::get().to(get_price_alerts))
+                            .route("/alerts", web::post().to(create_price_alert))
+                            .route("/alerts/{alert_id}", web::put().to(update_price_alert))
+                            .route("/alerts/{alert_id}", web::delete().to(delete_price_alert))
                     ),
             )
     })

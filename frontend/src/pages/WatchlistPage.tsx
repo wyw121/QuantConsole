@@ -1,13 +1,13 @@
 import { Button } from "@/components/Button";
 import { Card, CardBody, CardHeader } from "@/components/UI";
+import { TokenWatchList } from "@/components/Watchlist/TokenWatchList";
+import { PriceAlertPanel } from "@/components/Watchlist/PriceAlertPanel";
 import { useAuth } from "@/hooks";
 import {
   ArrowUpDown,
   Bell,
   Eye,
-  Filter,
   Plus,
-  Search,
   Settings,
   Star,
   TrendingUp,
@@ -20,7 +20,6 @@ export const WatchlistPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "watchlist" | "alerts" | "comparison"
   >("watchlist");
-  const [searchTerm, setSearchTerm] = useState("");
 
   const handleLogout = async () => {
     await logout();
@@ -135,91 +134,15 @@ export const WatchlistPage: React.FC = () => {
           <div className="mt-6">
             {activeTab === "watchlist" && (
               <div className="space-y-6">
-                {/* 搜索和过滤 */}
-                <div className="flex items-center justify-between space-x-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="搜索代币..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-dark-800 border border-dark-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-                    />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled
-                    title="功能开发中"
-                    className="opacity-50 cursor-not-allowed"
-                  >
-                    <Filter className="w-4 h-4 mr-2" />
-                    筛选
-                  </Button>
-                </div>
-
-                {/* 关注列表 */}
-                <Card>
-                  <CardHeader>
-                    <h3 className="text-lg font-medium text-gray-100">
-                      我的关注列表
-                    </h3>
-                  </CardHeader>
-                  <CardBody>
-                    <div className="text-center py-12">
-                      <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <h4 className="text-lg font-medium text-gray-200 mb-2">
-                        暂无关注代币
-                      </h4>
-                      <p className="text-gray-400 mb-6">
-                        添加您感兴趣的代币到关注列表，实时监控价格变动
-                      </p>
-                      <Button
-                        variant="primary"
-                        disabled
-                        title="功能开发中"
-                        className="opacity-50 cursor-not-allowed"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        添加第一个代币
-                      </Button>
-                    </div>
-                  </CardBody>
-                </Card>
+                {/* 关注代币列表组件 */}
+                <TokenWatchList />
               </div>
             )}
 
             {activeTab === "alerts" && (
               <div className="space-y-6">
-                {/* 价格提醒设置 */}
-                <Card>
-                  <CardHeader>
-                    <h3 className="text-lg font-medium text-gray-100">
-                      价格提醒设置
-                    </h3>
-                  </CardHeader>
-                  <CardBody>
-                    <div className="text-center py-12">
-                      <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <h4 className="text-lg font-medium text-gray-200 mb-2">
-                        暂无价格提醒
-                      </h4>
-                      <p className="text-gray-400 mb-6">
-                        设置智能价格提醒，第一时间获知重要价格变动
-                      </p>
-                      <Button
-                        variant="primary"
-                        disabled
-                        title="功能开发中"
-                        className="opacity-50 cursor-not-allowed"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        创建提醒
-                      </Button>
-                    </div>
-                  </CardBody>
-                </Card>
+                {/* 价格提醒组件 */}
+                <PriceAlertPanel />
               </div>
             )}
 

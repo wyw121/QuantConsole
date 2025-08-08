@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>策略服务测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #404040;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #6d28d9;
+        }
+        pre {
+            background: #111;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 QuantConsole 策略服务测试</h1>
+    
+    <div class="test-section">
+        <h2>环境变量检查</h2>
+        <button onclick="checkEnvironment()">检查环境</button>
+        <pre id="env-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>API Base URL 测试</h2>
+        <button onclick="testApiConnection()">测试连接</button>
+        <pre id="api-result"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>策略服务测试</h2>
+        <button onclick="testStrategyService()">测试策略服务</button>
+        <pre id="strategy-result"></pre>
+    </div>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
+            element.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+        }
+
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        async function checkEnvironment() {
+            clearLog('env-result');
+            log('env-result', '🔍 检查环境变量...', 'info');
+            
+            try {
+                // 检查是否是开发环境
+                const isDev = window.location.hostname === 'localhost';
+                log('env-result', `开发环境: ${isDev}`, isDev ? 'success' : 'warning');
+                
+                // 模拟环境变量检查
+                const mockEnvVars = {
+                    'VITE_API_BASE_URL': 'http://localhost:8080',
+                    'VITE_WS_BASE_URL': 'ws://localhost:8080',
+                    'VITE_APP_NAME': 'QuantConsole',
+                    'VITE_ENVIRONMENT': 'development'
+                };
+
+                Object.entries(mockEnvVars).forEach(([key, value]) => {
+                    log('env-result', `${key}: ${value}`, 'success');
+                });
+
+                log('env-result', '✅ 环境检查完成', 'success');
+            } catch (error) {
+                log('env-result', `❌ 环境检查失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testApiConnection() {
+            clearLog('api-result');
+            log('api-result', '🌐 测试API连接...', 'info');
+            
+            const apiBaseUrl = 'http://localhost:8080';
+            
+            try {
+                log('api-result', `连接目标: ${apiBaseUrl}`, 'info');
+                
+                // 尝试连接API
+                const response = await fetch(`${apiBaseUrl}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('api-result', `✅ API连接成功: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    log('api-result', `⚠️ API响应异常: ${response.status} ${response.statusText}`, 'warning');
+                }
+            } catch (error) {
+                log('api-result', `❌ API连接失败: ${error.message}`, 'error');
+                log('api-result', '💡 这是正常的，因为后端服务可能尚未启动', 'warning');
+                log('api-result', '📋 请确保后端服务运行在 http://localhost:8080', 'info');
+            }
+        }
+
+        async function testStrategyService() {
+            clearLog('strategy-result');
+            log('strategy-result', '🎯 测试策略服务...', 'info');
+            
+            try {
+                // 模拟策略数据
+                const mockStrategy = {
+                    id: 'test-001',
+                    name: '测试策略',
+                    description: '这是一个测试策略',
+                    type: 'TECHNICAL',
+                    status: 'DRAFT',
+                    conditions: [
+                        {
+                            indicator: 'MA',
+                            period: 20,
+                            operator: 'GREATER_THAN',
+                            value: 100
+                        }
+                    ]
+                };
+
+                log('strategy-result', '📊 模拟策略数据创建:', 'info');
+                log('strategy-result', JSON.stringify(mockStrategy, null, 2), 'success');
+
+                // 测试策略验证逻辑
+                const isValidStrategy = mockStrategy.name && 
+                                       mockStrategy.type && 
+                                       mockStrategy.conditions && 
+                                       mockStrategy.conditions.length > 0;
+
+                log('strategy-result', `策略验证结果: ${isValidStrategy ? '✅ 通过' : '❌ 失败'}`, 
+                    isValidStrategy ? 'success' : 'error');
+
+                // 模拟API调用（实际会连接后端）
+                log('strategy-result', '🔄 模拟API调用...', 'info');
+                
+                const apiCall = async () => {
+                    // 这里应该调用真实的策略API
+                    const apiBaseUrl = 'http://localhost:8080';
+                    const response = await fetch(`${apiBaseUrl}/api/v1/strategies`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // 'Authorization': 'Bearer <token>'
+                        },
+                    });
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    } else {
+                        throw new Error(`API调用失败: ${response.status}`);
+                    }
+                };
+
+                try {
+                    const result = await apiCall();
+                    log('strategy-result', '✅ 策略API调用成功:', 'success');
+                    log('strategy-result', JSON.stringify(result, null, 2), 'success');
+                } catch (error) {
+                    log('strategy-result', `⚠️ API调用失败: ${error.message}`, 'warning');
+                    log('strategy-result', '💡 这是预期的，因为后端尚未实现策略API', 'info');
+                }
+
+                log('strategy-result', '✅ 策略服务测试完成', 'success');
+                
+            } catch (error) {
+                log('strategy-result', `❌ 策略服务测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载时自动检查环境
+        window.addEventListener('load', () => {
+            log('env-result', '🎯 QuantConsole 策略服务测试页面加载完成', 'success');
+        });
+    </script>
+</body>
+</html>

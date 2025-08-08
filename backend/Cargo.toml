@@ -26,6 +26,7 @@ sea-orm = { version = "0.12", features = [
 ] }
 sea-orm-migration = "0.12"
 migration = { path = "./migration" }
+rust_decimal = "1.34"
 
 # 认证和安全
 jsonwebtoken = "9.2"

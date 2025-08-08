@@ -1,5 +1,7 @@
 // 用户相关类型定义
 export * from "./trading";
+export * from "./exchange";
+export * from "./watchlist";
 
 export interface User {
   id: string;
